@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\v1\AuthController;
+use App\Http\Controllers\Api\V1\PermissionController;
+use App\Http\Controllers\Api\V1\RoleController;
 
 // Route::get('/sanctum/csrf-cookie', [\Laravel\Sanctum\Http\Controllers\CsrfCookieController::class, 'show']);
 
@@ -30,4 +32,12 @@ Route::post('/login',    [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout',  [AuthController::class, 'logout']);
     Route::get('/user',       [AuthController::class, 'user']);
+
+    Route::apiResource('roles', RoleController::class);
+    Route::apiResource('permissions', PermissionController::class);
+
+    Route::post('users/{user}/roles/{role}', [UserController::class, 'assignRole']);
+    Route::delete('users/{user}/roles/{role}', [UserController::class, 'removeRole']);
+    Route::post('roles/{role}/permissions/{permission}', [RoleController::class, 'assignPermission']);
+    Route::delete('roles/{role}/permissions/{permission}', [RoleController::class, 'removePermission']);
 });
