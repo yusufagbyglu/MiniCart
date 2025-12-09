@@ -1,0 +1,324 @@
+-- Users
+user [color: "blue", icon: "user"] { 
+  id pk
+  name string
+  email string unique
+  email_verified_at timestamp?
+  password string
+  remember_token string?
+  last_password_change_at timestamp?
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp?
+}
+
+-- Roles
+role [color: "purple", icon:"role"] {
+  id pk
+  name string unique
+  description string?
+  created_at timestamp
+  updated_at timestamp
+}
+
+-- UserRole
+user_role [color: "blue", icon:"user_role"] {
+  id pk
+  user_id fk > user.id
+  role_id fk > role.id
+  created_at timestamp
+  unique(user_id, role_id)
+}
+
+-- Permissions
+permission [color: "green", icon:"permission"] {
+  id pk
+  name string unique
+  description string?
+  created_at timestamp
+  updated_at timestamp
+}
+
+-- RolePermission
+role_permission [color: "yellow"] {
+  id pk
+  role_id fk > role.id
+  permission_id fk > permission.id
+  created_at timestamp
+  unique(role_id, permission_id)
+}
+
+-- Categories
+category [color: "orange"] {
+  id pk
+  name string
+  description string?
+  parent_id fk → category.id?
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp?
+}
+
+-- TaxClass
+tax_class [color: "green"] {
+  id pk
+  name string
+  description string?
+  created_at timestamp
+  updated_at timestamp
+}
+
+-- TaxRate
+tax_rate [color: "red"] {
+  id pk
+  name string
+  country string
+  state string?
+  city string?
+  tax_type enum('vat','sales','gst','hst','pst','service','custom')
+  rate decimal(5,2)
+  is_active boolean default true
+  created_at timestamp
+  updated_at timestamp
+}
+
+-- TaxRule
+tax_rule [color: "yellow"] {
+  id pk
+  tax_class_id fk > tax_class.id
+  tax_rate_id fk > tax_rate.id
+  priority integer default 0
+  created_at timestamp
+  updated_at timestamp
+}
+
+-- Products
+product [color: "red"] {
+  id pk
+  name string
+  slug string unique
+  description text
+  price decimal(10,2)
+  base_currency char(3) default 'USD'       // EKLENDİ
+  stock integer
+  category_id fk > category.id
+  tax_class_id fk > tax_class.id
+  is_active boolean default true
+  sku string unique
+  weight decimal(8,2)?
+  length decimal(8,2)?
+  width decimal(8,2)?
+  height decimal(8,2)?
+  featured boolean default false
+  sales_count integer default 0
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp?
+}
+
+-- ProductImage
+product_image [color: "blue"] {
+  id pk
+  product_id fk > product.id
+  url string
+  alt_text string?
+  sort_order integer default 0
+  created_at timestamp
+}
+
+-- Cart
+cart [color: "purple"] {
+  id pk
+  user_id fk > user.id
+  created_at timestamp
+  updated_at timestamp
+}
+
+cart_item {
+  id pk
+  cart_id fk > cart.id
+  product_id fk > product.id
+  quantity integer
+  created_at timestamp
+  updated_at timestamp
+  unique(cart_id, product_id)
+}
+
+-- Coupons
+coupon [color: "green"] {
+  id pk
+  code string unique
+  discount_type enum('percentage','fixed')
+  discount_value decimal(10,2)
+  min_order_amount decimal(10,2)?
+  max_uses integer?
+  used_count integer default 0
+  valid_from timestamp
+  valid_until timestamp
+  is_active boolean default true
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp?
+}
+
+-- Orders
+order [color: "yellow"] {
+  id pk
+  user_id fk > user.id
+  shipping_address_id fk > user_address.id
+  billing_address_id fk > user_address.id
+  status enum('pending','confirmed','processing','shipped','delivered','cancelled','refunded')
+  total_amount decimal(10,2)
+  tax_amount decimal(10,2) default 0
+  discount_amount decimal(10,2) default 0
+  order_number string unique
+
+  currency char(3) default 'USD'             // EKLENDİ
+  exchange_rate decimal(18,8)?               // EKLENDİ
+
+  notes text?
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp?
+}
+
+-- Order Tax Details
+order_tax [color:"green"] {
+  id pk
+  order_id fk > order.id
+  tax_rate_id fk > tax_rate.id
+  tax_amount decimal(10,2)
+  rate decimal(5,2)
+  created_at timestamp
+}
+
+order_item {
+  id pk
+  order_id fk > order.id
+  product_id fk > product.id
+  quantity integer
+  unit_price decimal(10,2)
+  total_price decimal(10,2)
+  created_at timestamp
+  updated_at timestamp
+  unique(order_id, product_id)
+}
+
+order_coupon {
+  id pk
+  order_id fk > order.id
+  coupon_id fk > coupon.id
+  discount_amount decimal(10,2)
+  created_at timestamp
+}
+
+-- Payment
+payment [color: "red"] {
+  id pk
+  order_id fk > order.id
+  amount decimal(10,2)
+  method enum('fake','stripe','credit_card','bank_transfer')
+  status enum('pending','completed','failed','refunded','cancelled')
+  transaction_id string?
+  payment_details json?
+
+  currency char(3) default 'USD'             // EKLENDİ
+
+  created_at timestamp
+  updated_at timestamp
+}
+
+-- Shipping Detail
+shipping_detail [color: "blue"] {
+  id pk
+  order_id fk > order.id
+  tracking_number string?
+  shipped_at timestamp?
+  delivered_at timestamp?
+  carrier string?
+  shipping_cost decimal(10,2) default 0
+  created_at timestamp
+  updated_at timestamp
+}
+
+-- UserAddress
+user_address [color: "purple"] {
+  id pk
+  user_id fk > user.id
+  address_type enum('shipping','billing')
+  full_name string
+  address_line1 string
+  address_line2 string?
+  city string
+  state string?
+  country string default 'Turkey'
+  postal_code string
+  phone string?
+  is_default boolean default false
+  created_at timestamp
+  updated_at timestamp
+}
+
+-- Review
+review [color: "green"] {
+  id pk
+  product_id fk > product.id
+  user_id fk > user.id
+  rating integer CHECK(rating BETWEEN 1 AND 5)
+  title string?
+  comment text?
+  is_approved boolean default false
+  approved_by fk > user.id?
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp?
+}
+
+-- Wishlist
+wishlist [color: "yellow"] {
+  id pk
+  user_id fk > user.id
+  product_id fk > product.id
+  created_at timestamp
+  unique(user_id, product_id)
+}
+
+-- StockHistory
+stock_history [color: "red"] {
+  id pk
+  product_id fk > product.id
+  change integer
+  current_stock integer
+  reason enum('sale','restock','adjustment','return','initial')
+  reference_id string?
+  notes string?
+  created_by fk > user.id?
+  created_at timestamp
+}
+
+-- Notification
+notification [color: "blue"] {
+  id pk
+  user_id fk > user.id
+  type enum('order','payment','system','promotion')
+  title string
+  message text
+  data json?
+  is_read boolean default false
+  read_at timestamp?
+  created_at timestamp
+}
+
+-- AuditLog
+audit_log [color: "purple"] {
+  id pk
+  user_id fk > user.id
+  action string
+  target_type string
+  target_id integer
+  old_data json?
+  new_data json?
+  ip_address string?
+  user_agent string?
+  created_at timestamp
+}

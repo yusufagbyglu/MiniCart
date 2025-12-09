@@ -1,0 +1,118 @@
+## API ENDPOINT TASARIMLARI (v1)
+### Auth Endpoints
+text
+
+```
+POST    /api/v1/auth/register
+POST    /api/v1/auth/login
+POST    /api/v1/auth/logout
+POST    /api/v1/auth/refresh-token
+POST    /api/v1/auth/forgot-password
+POST    /api/v1/auth/reset-password
+GET     /api/v1/auth/email/verify/{id}/{hash}
+POST    /api/v1/auth/email/verification-notification
+```
+### User Endpoints
+text
+
+```
+GET     /api/v1/user/profile
+PUT     /api/v1/user/profile
+PUT     /api/v1/user/password
+GET     /api/v1/user/addresses
+POST    /api/v1/user/addresses
+GET     /api/v1/user/addresses/{id}
+PUT     /api/v1/user/addresses/{id}
+DELETE  /api/v1/user/addresses/{id}
+GET     /api/v1/user/orders
+GET     /api/v1/user/wishlist
+POST    /api/v1/user/wishlist/{productId}
+DELETE  /api/v1/user/wishlist/{productId}
+```
+### Product Endpoints
+text
+
+```
+GET     /api/v1/products
+POST    /api/v1/products (admin)
+GET     /api/v1/products/{slug}
+PUT     /api/v1/products/{id} (admin)
+DELETE  /api/v1/products/{id} (admin)
+GET     /api/v1/products/search
+GET     /api/v1/products/categories
+GET     /api/v1/products/categories/{id}/products
+POST    /api/v1/products/{id}/images (admin)
+DELETE  /api/v1/products/{id}/images/{imageId} (admin)
+```
+### Cart Endpoints
+text
+
+```
+GET     /api/v1/cart
+POST    /api/v1/cart/items
+PUT     /api/v1/cart/items/{itemId}
+DELETE  /api/v1/cart/items/{itemId}
+POST    /api/v1/cart/apply-coupon
+DELETE  /api/v1/cart/remove-coupon
+GET     /api/v1/cart/summary
+```
+### Order Endpoints
+text
+
+```
+POST    /api/v1/orders/checkout
+GET     /api/v1/orders
+GET     /api/v1/orders/{orderNumber}
+POST    /api/v1/orders/{orderNumber}/cancel
+POST    /api/v1/orders/{orderNumber}/return
+GET     /api/v1/orders/{orderNumber}/invoice
+```
+### Payment Endpoints
+text
+
+```
+POST    /api/v1/payments/{orderId}/process
+GET     /api/v1/payments/{orderId}/status
+POST    /api/v1/payments/{paymentId}/refund (admin)
+```
+### Review Endpoints
+text
+
+```
+GET     /api/v1/products/{productId}/reviews
+POST    /api/v1/products/{productId}/reviews
+PUT     /api/v1/reviews/{reviewId}
+DELETE  /api/v1/reviews/{reviewId}
+POST    /api/v1/admin/reviews/{reviewId}/approve (admin)
+```
+### Admin Endpoints
+text
+
+```
+# User Management
+GET     /api/v1/admin/users
+GET     /api/v1/admin/users/{id}
+PUT     /api/v1/admin/users/{id}
+DELETE  /api/v1/admin/users/{id}
+
+# Order Management
+GET     /api/v1/admin/orders
+PUT     /api/v1/admin/orders/{id}/status
+GET     /api/v1/admin/orders/stats
+
+# Product Management
+GET     /api/v1/admin/products/stats
+POST    /api/v1/admin/products/import
+
+# Coupon Management
+GET     /api/v1/admin/coupons
+POST    /api/v1/admin/coupons
+PUT     /api/v1/admin/coupons/{id}
+DELETE  /api/v1/admin/coupons/{id}
+
+# Tax Management
+GET     /api/v1/admin/tax-rates
+POST    /api/v1/admin/tax-rates
+PUT     /api/v1/admin/tax-rates/{id}
+DELETE  /api/v1/admin/tax-rates/{id}
+```
