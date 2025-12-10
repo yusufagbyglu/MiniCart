@@ -79,4 +79,9 @@ class RoleController extends Controller
 
         return response()->json(['message' => 'Permission removed successfully.']);
     }
+
+    public function assignRole(Role $role, Permission $permission)
+    {
+        
+    }
 }
