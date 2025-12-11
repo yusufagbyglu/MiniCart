@@ -33,6 +33,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout',  [AuthController::class, 'logout']);
     Route::get('/user',       [AuthController::class, 'user']);
 
+    // User Management Routes
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
+
     Route::apiResource('roles', RoleController::class);
     Route::apiResource('permissions', PermissionController::class);
 

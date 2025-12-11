@@ -25,5 +25,6 @@ class AppServiceProvider extends ServiceProvider
     {
         Sanctum::usePersonalAccessTokenModel(SanctumPersonalAccessToken::class);
         User::observe(UserObserver::class);
+        
     }
 }
