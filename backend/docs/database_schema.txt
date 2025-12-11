@@ -99,7 +99,7 @@ product [color: "red"] {
   slug string unique
   description text
   price decimal(10,2)
-  base_currency char(3) default 'USD'       // EKLENDİ
+  base_currency char(3) default 'USD'       
   stock integer
   category_id fk > category.id
   tax_class_id fk > tax_class.id
@@ -173,8 +173,8 @@ order [color: "yellow"] {
   discount_amount decimal(10,2) default 0
   order_number string unique
 
-  currency char(3) default 'USD'             // EKLENDİ
-  exchange_rate decimal(18,8)?               // EKLENDİ
+  currency char(3) default 'USD'             
+  exchange_rate decimal(18,8)?               
 
   notes text?
   created_at timestamp
@@ -222,7 +222,7 @@ payment [color: "red"] {
   transaction_id string?
   payment_details json?
 
-  currency char(3) default 'USD'             // EKLENDİ
+  currency char(3) default 'USD'             
 
   created_at timestamp
   updated_at timestamp
