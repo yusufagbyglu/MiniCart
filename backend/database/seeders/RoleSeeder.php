@@ -13,9 +13,9 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        Role::create(['name' => 'Super Admin', 'description' => 'Full access to all system features.']);
-        Role::create(['name' => 'Shop Manager', 'description' => 'Manages products, orders, and inventory.']);
-        Role::create(['name' => 'Support', 'description' => 'Assists customers and manages reviews.']);
-        Role::create(['name' => 'Customer', 'description' => 'Default role for registered users.']);
+        Role::create(['name' => 'admin', 'description' => 'Full access to all system features.']);
+        Role::create(['name' => 'shop-manager', 'description' => 'Manages products, orders, and inventory.']);
+        Role::create(['name' => 'support', 'description' => 'Assists customers and manages reviews.']);
+        Role::create(['name' => 'customer', 'description' => 'Default role for registered users.']);
     }
 }
