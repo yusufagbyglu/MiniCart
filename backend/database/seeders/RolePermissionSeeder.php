@@ -17,7 +17,8 @@ class RolePermissionSeeder extends Seeder
         // Get roles
         $superAdminRole = Role::where('name', 'admin')->first();
         $shopManagerRole = Role::where('name', 'shop-manager')->first();
-        $customerRole = Role::where('name', 'customer')->first(); // Ensure this role exists
+        $customerRole = Role::where('name', 'customer')->first();
+        $supportRole = Role::where('name', 'support')->first();
 
         // Get permissions (assuming they were created by PermissionsSeeder)
         $viewUsersPermission = Permission::where('name', 'view_users')->first();
@@ -27,24 +28,37 @@ class RolePermissionSeeder extends Seeder
         $restoreUsersPermission = Permission::where('name', 'restore_users')->first();
         $forceDeleteUsersPermission = Permission::where('name', 'force_delete_users')->first();
 
-        // Assign permissions to Super Admin
+        $viewProductsPermission = Permission::where('name', 'view_products')->first();
+
         if ($superAdminRole) {
-            $superAdminRole->permissions()->syncWithoutDetaching([
-                $viewUsersPermission->id,
-                $createUsersPermission->id,
-                $updateUsersPermission->id,
-                $deleteUsersPermission->id,
-                $restoreUsersPermission->id,
-                $forceDeleteUsersPermission->id,
-            ]);
+            $superAdminRole->permissions()->syncWithoutDetaching(array_filter([
+            $viewUsersPermission?->id,
+            $createUsersPermission?->id,
+            $updateUsersPermission?->id,
+            $deleteUsersPermission?->id,
+            $restoreUsersPermission?->id,
+            $forceDeleteUsersPermission?->id,
+        ]));
+}
+
+        if ($shopManagerRole) {
+            $shopManagerRole->permissions()->syncWithoutDetaching(array_filter([
+            $viewUsersPermission?->id,
+            $createUsersPermission?->id,
+            ]));
         }
 
-        // Assign permissions to Shop Manager (example, adjust as needed)
-        if ($shopManagerRole) {
-            $shopManagerRole->permissions()->syncWithoutDetaching([
-                $viewUsersPermission->id, // Shop Manager might need to view users
-                $createUsersPermission->id, // Maybe they can create new users
-            ]);
+        if ($customerRole) {
+            $customerRole->permissions()->syncWithoutDetaching(array_filter([
+            $viewProductsPermission?->id,
+        ]));
+        }
+
+        if ($supportRole) {
+            $supportRole->permissions()->syncWithoutDetaching(array_filter([
+            $viewUsersPermission?->id,
+            $updateUsersPermission?->id,
+        ]));
         }
 
         // Customer role generally has no direct permissions on other users
