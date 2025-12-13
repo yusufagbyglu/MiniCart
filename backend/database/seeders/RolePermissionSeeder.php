@@ -15,9 +15,9 @@ class RolePermissionSeeder extends Seeder
     public function run(): void
     {
         // Get roles
-        $superAdminRole = Role::where('name', 'Super Admin')->first();
-        $shopManagerRole = Role::where('name', 'Shop Manager')->first();
-        $customerRole = Role::where('name', 'Customer')->first(); // Ensure this role exists
+        $superAdminRole = Role::where('name', 'admin')->first();
+        $shopManagerRole = Role::where('name', 'shop-manager')->first();
+        $customerRole = Role::where('name', 'customer')->first(); // Ensure this role exists
 
         // Get permissions (assuming they were created by PermissionsSeeder)
         $viewUsersPermission = Permission::where('name', 'view_users')->first();
