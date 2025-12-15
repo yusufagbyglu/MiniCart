@@ -6,15 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Auth\Middleware\Authorize;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 
 class UserController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         $this->authorize('viewAny', User::class);
+    
         return response()->json(User::all());
     }
 
@@ -23,7 +27,7 @@ class UserController extends Controller
      */
     public function store(\App\Http\Requests\StoreUserRequest $request)
     {
-        $this->authorize('create', User::class);
+        $this->authorize('view_any', User::class);
         $user = User::create($request->validated());
         return response()->json($user, 201);
     }
