@@ -16,7 +16,7 @@ class CheckRole
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
      * @param  string  ...$roles  The roles to check for, passed from the route definition.
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {

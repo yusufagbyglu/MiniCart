@@ -188,4 +188,27 @@ class ProductController extends Controller
 
         return response()->json(null, 204);
     }
+
+    public function addImage(Request $request, Product $product)
+    {
+        $validated = $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        $imageFile = $request->file('image');
+        $path = $imageFile->store('products', 'public');
+
+        $isPrimary = $request->boolean('is_primary', false);
+        if ($isPrimary) {
+            // Reset existing primary
+            $product->images()->update(['is_primary' => false]);
+        }
+
+        $image = $product->images()->create([
+            'image_path' => $path,
+            'is_primary' => $isPrimary
+        ]);
+
+        return response()->json($image, 201);
+    }
 }

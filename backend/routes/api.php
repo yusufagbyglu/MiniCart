@@ -33,8 +33,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/products/categories', [ProductController::class, 'categories']);       
     Route::get('/products/categories/{category}/products', [ProductController::class,   
        'categoryProducts']);
-    Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);      
-    Route::get('/reviews/{review}', [ReviewController::class, 'show']);
+    // Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);      
+    // Route::get('/reviews/{review}', [ReviewController::class, 'show']);
 
     // Protected routes
     Route::middleware('auth:sanctum')->group(function () {
@@ -62,7 +62,7 @@ Route::prefix('v1')->group(function () {
             // Support can manage all reviews, not just their own.
             // Route::put('/reviews/{review}', [ReviewController::class, 'update']);        
             // Route::delete('/reviews/{review}', [ReviewController::class, 'destroy']);    
-        });
+    });
         
              // Shop Manager Routes (Role: 'shop-manager' or 'admin')
     Route::middleware(['auth:sanctum', 'role:shop-manager,admin'])->prefix('management')->group
@@ -74,7 +74,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/products/{product:slug}/images', [ProductController::class, 'addImage']);
             Route::delete('/products/{product:slug}/images/{image}', [ProductController::class, 'removeImage']);
         
-        });
+    });
     
          // Admin-Only Routes (Role: 'admin')
     Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(
