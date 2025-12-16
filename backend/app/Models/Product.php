@@ -36,6 +36,10 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function taxClass(){
+        return $this->belongsTo(TaxClass::class);
+    }
+
     public function images(){
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
