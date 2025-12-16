@@ -8,6 +8,9 @@ use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Http\Resources\ProductListResource; // Add this line
+use App\Http\Resources\ProductDetailResource; // Add this line
+
 
 class ProductController extends Controller
 {
@@ -39,13 +42,13 @@ class ProductController extends Controller
 
         // Pagination
         $perPage = $request->query('per_page', 15);
-        return $query->paginate($perPage);
+        return ProductListResource::collection($query->paginate($perPage)); // Modified line
     }
 
     // Get single product with all details
     public function show(Product $product)
     {            
-        return $product->load(['category', 'images']);
+        return new ProductDetailResource($product->load(['category', 'images'])); // Modified line
     }
 
     // Create a new product
