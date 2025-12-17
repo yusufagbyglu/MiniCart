@@ -82,7 +82,9 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'base_currency' => 'required|string|size:3',
             'stock' => 'required|integer|min:0',
+            'sku' => 'required|string|max:255|unique:products,sku',
             'category_id' => 'required|exists:categories,id',
+            'tax_class_id' => 'nullable|exists:tax_classes,id',
             'weight' => 'nullable|numeric|min:0',
             'length' => 'nullable|numeric|min:0',
             'width' => 'nullable|numeric|min:0',
@@ -124,7 +126,9 @@ class ProductController extends Controller
             'description' => 'sometimes|required|string',
             'price' => 'sometimes|required|numeric|min:0',
             'stock' => 'sometimes|required|integer|min:0',
+            'sku' => 'sometimes|required|string|max:255|unique:products,sku,' . $product->id,
             'category_id' => 'sometimes|required|exists:categories,id',
+            'tax_class_id' => 'nullable|exists:tax_classes,id',
             'weight' => 'nullable|numeric|min:0',
             'length' => 'nullable|numeric|min:0',
             'width' => 'nullable|numeric|min:0',
@@ -149,6 +153,11 @@ class ProductController extends Controller
                 $product->images()->create([
                     'image_path' => $path
                 ]);
+            }
+            // Ensure a primary image exists if there wasn't one before
+            if ($product->images()->where('is_primary', true)->doesntExist()) {
+                $firstImage = $product->images()->first();
+                $firstImage?->update(['is_primary' => true]);
             }
         }
 

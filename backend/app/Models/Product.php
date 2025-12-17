@@ -15,6 +15,7 @@ class Product extends Model
         'price',
         'base_currency',
         'stock',
+        'tax_class_id',
         'category_id',
         'is_active',
         'sku',
@@ -37,7 +38,7 @@ class Product extends Model
     }
 
     public function taxClass(){
-        return $this->belongsTo(TaxClass::class);
+        return $this->belongsTo(TaxClass::class, 'tax_class_id');
     }
 
     public function images(){
