@@ -15,6 +15,28 @@ use App\Http\Resources\ProductDetailResource; // Add this line
 class ProductController extends Controller
 {
     // List all active products with pagination
+    /**
+     * @OA\Get(
+     *      path="/api/v1/products",
+     *      operationId="getProductsList",
+     *      tags={"Products"},
+     *      summary="Get list of products",
+     *      description="Returns list of products",
+     *      @OA\Response(
+     *          response=200,
+     *          description="Successful operation",
+     *          @OA\JsonContent(ref="#/components/schemas/ProductListResource")
+     *       ),
+     *      @OA\Response(
+     *          response=401,
+     *          description="Unauthenticated",
+     *      ),
+     *      @OA\Response(
+     *          response=403,
+     *          description="Forbidden"
+     *      )
+     * )
+     */
     public function index(Request $request)
     {
         $query = Product::with(['category', 'images'])->where('is_active', true);

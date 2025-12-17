@@ -6,8 +6,27 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage; // Import Storage facade
 
+/**
+ * @OA\Schema(
+ *     title="ProductListResource",
+ *     description="Product list resource",
+ *     @OA\Xml(
+ *         name="ProductListResource"
+ *     )
+ * )
+ */
 class ProductListResource extends JsonResource
 {
+    /**
+     * @OA\Property(
+     *     title="Data",
+     *     description="Data wrapper"
+     * )
+     *
+     * @var \App\Models\Product[]
+     */
+    private $data;
+
     /**
      * Transform the resource into an array.
      *
