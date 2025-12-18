@@ -2,65 +2,103 @@
 
 namespace App\Policies;
 
-use App\Models\Product;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use App\Models\Product;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProductPolicy
 {
+    use HandlesAuthorization;
+
     /**
-     * Determine whether the user can view any models.
+     * Determine if the user can view any products.
      */
-    public function viewAny(User $user): bool
+    public function viewAny(?User $user): bool
     {
-        return $user->hasPermissionTo('view_products');
+        // Anyone can view active products (even guests)
+        if (!$user) {
+            return true;
+        }
+
+        return $user->hasPermission('products.view') || 
+               $user->hasPermission('products.view-all');
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Determine if the user can view the product.
      */
-    public function view(User $user, Product $product): bool
+    public function view(?User $user, Product $product): bool
     {
-        return $user->hasPermissionTo('view_products');
+        // Anyone can view active products
+        if ($product->is_active && !$product->deleted_at) {
+            return true;
+        }
+
+        // Only users with view-all permission can see inactive/deleted
+        return $user && $user->hasPermission('products.view-all');
     }
 
     /**
-     * Determine whether the user can create models.
+     * Determine if the user can create products.
      */
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('create_products');
+        return $user->hasPermission('products.create');
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Determine if the user can update the product.
      */
     public function update(User $user, Product $product): bool
     {
-        return $user->hasPermissionTo('update_products');
+        return $user->hasPermission('products.update');
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Determine if the user can delete the product.
      */
     public function delete(User $user, Product $product): bool
     {
-        return $user->hasPermissionTo('delete_products');
+        return $user->hasPermission('products.delete');
     }
 
     /**
-     * Determine whether the user can restore the model.
+     * Determine if the user can restore the product.
      */
     public function restore(User $user, Product $product): bool
     {
-        return false;
+        return $user->hasPermission('products.restore');
     }
 
     /**
-     * Determine whether the user can permanently delete the model.
+     * Determine if the user can permanently delete the product.
      */
     public function forceDelete(User $user, Product $product): bool
     {
-        return false;
+        return $user->hasPermission('products.force-delete');
+    }
+
+    /**
+     * Determine if the user can manage product stock.
+     */
+    public function manageStock(User $user, Product $product): bool
+    {
+        return $user->hasPermission('products.manage-stock');
+    }
+
+    /**
+     * Determine if the user can manage product images.
+     */
+    public function manageImages(User $user, Product $product): bool
+    {
+        return $user->hasPermission('products.manage-images');
+    }
+
+    /**
+     * Determine if the user can set product as featured.
+     */
+    public function setFeatured(User $user, Product $product): bool
+    {
+        return $user->hasPermission('products.set-featured');
     }
 }

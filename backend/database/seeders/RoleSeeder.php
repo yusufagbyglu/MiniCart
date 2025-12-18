@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Permission;
 use Illuminate\Database\Seeder;
 use App\Models\Role;
 use Illuminate\Support\Facades\DB;
@@ -42,6 +43,8 @@ class RoleSeeder extends Seeder
         $rolePermissions = [];
 
         // Assign all permissions to Admin
+        // NOTE: In practice, Admin users are granted full access via middleware, checking the role or Gate,
+        // so adding permissions here is mostly symbolic for reference.
         foreach ($allPermissions as $permissionId) {
             $rolePermissions[] = [
                 'role_id' => $rolesMap['admin']->id,
