@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Http\Resources\ProductListResource; // Add this line
 use App\Http\Resources\ProductDetailResource; // Add this line
+use App\Models\User;
 
 
 class ProductController extends Controller
@@ -65,6 +66,26 @@ class ProductController extends Controller
         // Pagination
         $perPage = $request->query('per_page', 15);
         return ProductListResource::collection($query->paginate($perPage)); // Modified line
+    }
+
+    public function getVisibleProducts(?User $user)
+    {
+        $query = Product::query();
+        
+            // For guests and customers, only show active products
+            if (!$user || !$user->hasPermission('products.view-all')) {
+                $query->where('is_active', true);
+            }
+
+            return $query;
+    }
+
+    /**
+     * Get all products for admin
+     */
+    public function getAllProducts()
+    {
+        return Product::all();
     }
 
     // Get single product with all details

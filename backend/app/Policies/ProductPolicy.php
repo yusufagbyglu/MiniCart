@@ -34,7 +34,7 @@ class ProductPolicy
             return true;
         }
 
-        // Only users with view-all permission can see inactive/deleted
+        // Only authenticated users with view-all permission can see inactive/deleted
         return $user && $user->hasPermission('products.view-all');
     }
 
@@ -43,6 +43,7 @@ class ProductPolicy
      */
     public function create(User $user): bool
     {
+        // Only admin and shop-manager can create
         return $user->hasPermission('products.create');
     }
 
