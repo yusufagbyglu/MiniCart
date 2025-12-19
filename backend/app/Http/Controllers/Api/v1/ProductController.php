@@ -197,6 +197,19 @@ class ProductController extends Controller
         return response()->json(null, 204);
     }
 
+    public function search(){
+        $products = Product::where('is_active', true)
+            ->where(function($query) {
+                $searchTerm = request()->query('q');
+                $query->where('name', 'like', "%{$searchTerm}%")
+                      ->orWhere('description', 'like', "%{$searchTerm}%");
+            })
+            ->with(['category', 'images'])
+            ->get();
+
+        return ProductListResource::collection($products);
+    }
+
     // Set primary image
     public function setPrimaryImage(Product $product, ProductImage $image)
     {
