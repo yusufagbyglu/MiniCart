@@ -8,13 +8,23 @@ use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use App\Http\Resources\ProductListResource; // Add this line
-use App\Http\Resources\ProductDetailResource; // Add this line
+use App\Http\Resources\ProductListResource;
+use App\Http\Resources\ProductDetailResource;
+use App\Illumunate\Support\Facades\Cache;
+use App\Illumunate\Support\Facades\DB;
+
+
 use App\Models\User;
 
 
 class ProductController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum')->except(['index', 'show']);
+        $this->middleware('throttle:60,1');
+    }
+
     // List all active products with pagination
     /**
      * @OA\Get(
@@ -40,6 +50,8 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('products.view', Product::class);
+        
         $query = Product::with(['category', 'images'])->where('is_active', true);
 
         // Conditionally apply filters and search
@@ -70,6 +82,7 @@ class ProductController extends Controller
 
     public function getVisibleProducts(?User $user)
     {
+        $this->authorize('products.view', Product::class);
         $query = Product::query();
         
             // For guests and customers, only show active products
@@ -85,6 +98,7 @@ class ProductController extends Controller
      */
     public function getAllProducts()
     {
+        $this->authorize('products.view-all', Product::class);
         return Product::all();
     }
 
@@ -97,6 +111,7 @@ class ProductController extends Controller
     // Create a new product
     public function store(Request $request)
     {
+        $this->authorize('products.create', Product::class);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
@@ -142,6 +157,7 @@ class ProductController extends Controller
     // Update existing product
     public function update(Request $request, Product $product)
     {
+        $this->authorize('products.update', Product::class);
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string',
@@ -188,6 +204,7 @@ class ProductController extends Controller
     // Delete a product
     public function destroy(Product $product)
     {
+        $this->authorize('products.delete', Product::class);
         // Delete associated images from storage
         foreach ($product->images as $image) {
             Storage::disk('public')->delete($image->image_path);
@@ -213,6 +230,7 @@ class ProductController extends Controller
     // Set primary image
     public function setPrimaryImage(Product $product, ProductImage $image)
     {
+        $this->authorize('products.update', Product::class);
         // Verify the image belongs to the product
         if ($image->product_id !== $product->id) {
             return response()->json(['message' => 'Image does not belong to this product'], 422);
@@ -230,6 +248,7 @@ class ProductController extends Controller
     // Remove an image
     public function removeImage(Product $product, ProductImage $image)
     {
+        $this->authorize('products.update', Product::class);
         // Verify the image belongs to the product
         if ($image->product_id !== $product->id) {
             return response()->json(['message' => 'Image does not belong to this product'], 422);
@@ -259,6 +278,7 @@ class ProductController extends Controller
 
     public function addImage(Request $request, Product $product)
     {
+        $this->authorize('products.manage-images', Product::class);
         $validated = $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
