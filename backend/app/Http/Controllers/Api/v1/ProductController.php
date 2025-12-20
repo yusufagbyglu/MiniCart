@@ -12,10 +12,7 @@ use App\Http\Resources\ProductListResource;
 use App\Http\Resources\ProductDetailResource;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-
-
 use App\Models\User;
-
 
 class ProductController extends Controller
 {
@@ -51,7 +48,7 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $this->authorize('products.view', Product::class);
-        
+
         $query = Product::with(['category', 'images'])->where('is_active', true);
 
         // Conditionally apply filters and search
@@ -77,11 +74,11 @@ class ProductController extends Controller
 
         // Pagination
         $perPage = $request->query('per_page', 15);
-        return ProductListResource::collection($query->paginate($perPage)); // Modified line
+        return ProductListResource::collection($query->paginate($perPage));
     }
 
     /**
-     * Get all products for admin
+     * Get all products for admin, with pagination and filters.
      */
     public function getAllProducts(Request $request)
     {
@@ -121,8 +118,8 @@ class ProductController extends Controller
 
     // Get single product with all details
     public function show(Product $product)
-    {            
-        return new ProductDetailResource($product->load(['category', 'images'])); // Modified line
+    {
+        return new ProductDetailResource($product->load(['category', 'images']));
     }
 
     // Create a new product
@@ -147,34 +144,51 @@ class ProductController extends Controller
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        // Generate slug from name
-        $validated['slug'] = Str::slug($validated['name']);
+        $imagePaths = [];
 
-        // Handle featured flag
-        $validated['featured'] = $request->boolean('featured', false);
-        $validated['is_active'] = $request->boolean('is_active', true);
+        try {
+            $product = DB::transaction(function () use ($validated, $request, &$imagePaths) {
+                // Generate slug from name
+                $validated['slug'] = Str::slug($validated['name']);
 
-        // Create product
-        $product = Product::create($validated);
+                // Handle featured flag
+                $validated['featured'] = $request->boolean('featured', false);
+                $validated['is_active'] = $request->boolean('is_active', true);
 
-        // Handle image uploads
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('products', 'public');
-                $product->images()->create([
-                    'image_path' => $path,
-                    'is_primary' => $product->images()->count() === 0 // First image is primary
-                ]);
+                // Create product
+                $product = Product::create($validated);
+
+                // Handle image uploads
+                if ($request->hasFile('images')) {
+                    foreach ($request->file('images') as $key => $image) {
+                        $path = $image->store('products', 'public');
+                        $imagePaths[] = $path; // Store path for potential cleanup
+                        $product->images()->create([
+                            'image_path' => $path,
+                            'is_primary' => $key === 0 // First image is primary
+                        ]);
+                    }
+                }
+                return $product;
+            });
+
+            return response()->json($product->load('images'), 201);
+
+        } catch (\Throwable $e) {
+            // Cleanup uploaded files if transaction fails
+            foreach($imagePaths as $path) {
+                Storage::disk('public')->delete($path);
             }
+            
+            // Re-throw the exception to be handled by Laravel's exception handler
+            throw $e;
         }
-
-        return response()->json($product->load('images'), 201);
     }
 
     // Update existing product
     public function update(Request $request, Product $product)
     {
-        $this->authorize('products.update', Product::class);
+        $this->authorize('products.update', $product);
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string',
@@ -193,66 +207,92 @@ class ProductController extends Controller
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        // Update slug if name changed
-        if ($request->has('name')) {
-            $validated['slug'] = Str::slug($validated['name']);
-        }
+        $imagePaths = [];
 
-        $product->update($validated);
+        try {
+            DB::transaction(function () use ($validated, $request, $product, &$imagePaths) {
+                // Update slug if name changed
+                if ($request->has('name')) {
+                    $validated['slug'] = Str::slug($validated['name']);
+                }
 
-        // Handle new image uploads
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $path = $image->store('products', 'public');
-                $product->images()->create([
-                    'image_path' => $path
-                ]);
+                $product->update($validated);
+
+                // Handle new image uploads
+                if ($request->hasFile('images')) {
+                    foreach ($request->file('images') as $image) {
+                        $path = $image->store('products', 'public');
+                        $imagePaths[] = $path; // Store path for potential cleanup
+                        $product->images()->create([
+                            'image_path' => $path
+                        ]);
+                    }
+                    // Ensure a primary image exists if there wasn't one before
+                    if ($product->images()->where('is_primary', true)->doesntExist()) {
+                        $firstImage = $product->images()->first();
+                        $firstImage?->update(['is_primary' => true]);
+                    }
+                }
+            });
+
+            return response()->json($product->fresh()->load('images'));
+
+        } catch (\Throwable $e) {
+            // Cleanup uploaded files if transaction fails
+            foreach($imagePaths as $path) {
+                Storage::disk('public')->delete($path);
             }
-            // Ensure a primary image exists if there wasn't one before
-            if ($product->images()->where('is_primary', true)->doesntExist()) {
-                $firstImage = $product->images()->first();
-                $firstImage?->update(['is_primary' => true]);
-            }
+            
+            // Re-throw the exception to be handled by Laravel's exception handler
+            throw $e;
         }
-
-        return response()->json($product->fresh()->load('images'));
     }
 
     // Delete a product
     public function destroy(Product $product)
     {
-        $this->authorize('products.delete', Product::class);
-        // Delete associated images from storage
-        foreach ($product->images as $image) {
-            Storage::disk('public')->delete($image->image_path);
+        $this->authorize('products.delete', $product);
+
+        // Get image paths before deleting the product
+        $imagePaths = $product->images()->pluck('image_path')->all();
+
+        DB::transaction(function () use ($product) {
+            // Deleting the product will cascade delete the image records from DB
+            $product->delete();
+        });
+
+        // Delete associated images from storage after DB transaction is successful
+        foreach ($imagePaths as $path) {
+            Storage::disk('public')->delete($path);
         }
 
-        $product->delete();
         return response()->json(null, 204);
     }
 
     // Set primary image
     public function setPrimaryImage(Product $product, ProductImage $image)
     {
-        $this->authorize('products.manage-images', Product::class);
+        $this->authorize('products.manage-images', $product);
         // Verify the image belongs to the product
         if ($image->product_id !== $product->id) {
             return response()->json(['message' => 'Image does not belong to this product'], 422);
         }
 
-        // Reset all primary flags
-        $product->images()->update(['is_primary' => false]);
+        DB::transaction(function() use ($product, $image) {
+            // Reset all primary flags
+            $product->images()->update(['is_primary' => false]);
 
-        // Set new primary
-        $image->update(['is_primary' => true]);
+            // Set new primary
+            $image->update(['is_primary' => true]);
+        });
 
-        return response()->json($image);
+        return response()->json($image->fresh());
     }
 
     // Remove an image
     public function removeImage(Product $product, ProductImage $image)
     {
-        $this->authorize('products.manage-images', Product::class);
+        $this->authorize('products.manage-images', $product);
         // Verify the image belongs to the product
         if ($image->product_id !== $product->id) {
             return response()->json(['message' => 'Image does not belong to this product'], 422);
@@ -263,72 +303,78 @@ class ProductController extends Controller
             return response()->json(['message' => 'Cannot remove the last image'], 422);
         }
 
-        // Delete from storage
-        Storage::disk('public')->delete($image->image_path);
+        $imagePath = $image->image_path;
 
-        // Delete from database
-        $image->delete();
+        DB::transaction(function() use ($product, $image) {
+            $wasPrimary = $image->is_primary;
+            
+            // Delete from database
+            $image->delete();
 
-        // If we deleted the primary image, set a new one
-        if ($image->is_primary) {
-            $newPrimary = $product->images()->first();
-            if ($newPrimary) {
-                $newPrimary->update(['is_primary' => true]);
+            // If we deleted the primary image, set a new one
+            if ($wasPrimary) {
+                $newPrimary = $product->images()->first();
+                if ($newPrimary) {
+                    $newPrimary->update(['is_primary' => true]);
+                }
             }
-        }
+        });
+
+        // Delete from storage after DB transaction is successful
+        Storage::disk('public')->delete($imagePath);
 
         return response()->json(null, 204);
     }
 
     public function addImage(Request $request, Product $product)
-{
-    // Check if the user is authorized to manage images for this product
-    $this->authorize('products.manage-images', $product);
+    {
+        // Check if the user is authorized to manage images for this product
+        $this->authorize('products.manage-images', $product);
 
-    // Validate request data
-    $request->validate([
-        'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-        'is_primary' => 'sometimes|boolean',
-    ]);
+        // Validate request data
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'is_primary' => 'sometimes|boolean',
+        ]);
 
-    $path = null;
+        $path = null;
 
-    try {
-        DB::transaction(function () use ($request, $product, &$path) {
+        try {
+            DB::transaction(function () use ($request, $product, &$path) {
 
-            // Store the uploaded image
-            $path = $request->file('image')->store('products', 'public');
+                // Store the uploaded image
+                $path = $request->file('image')->store('products', 'public');
 
-            $isPrimary = $request->boolean('is_primary', false);
+                $isPrimary = $request->boolean('is_primary', false);
 
-            // If the new image is marked as primary,
-            // reset all existing primary images for this product
-            if ($isPrimary) {
-                $product->images()->update(['is_primary' => false]);
+                // If the new image is marked as primary,
+                // reset all existing primary images for this product
+                if ($isPrimary) {
+                    $product->images()->update(['is_primary' => false]);
+                }
+
+                // Create the image record in the database
+                $product->images()->create([
+                    'image_path' => $path,
+                    'is_primary' => $isPrimary,
+                ]);
+            });
+
+            return response()->json([
+                'message' => 'Image added successfully'
+            ], 201);
+
+        } catch (\Throwable $e) {
+
+            // If the transaction fails, the database will be rolled back,
+            // but the file system will not.
+            // Therefore, we manually delete the uploaded file if it exists.
+            if ($path && Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
             }
 
-            // Create the image record in the database
-            $product->images()->create([
-                'image_path' => $path,
-                'is_primary' => $isPrimary,
-            ]);
-        });
-
-        return response()->json([
-            'message' => 'Image added successfully'
-        ], 201);
-
-    } catch (\Throwable $e) {
-
-        // If the transaction fails, the database will be rolled back,
-        // but the file system will not.
-        // Therefore, we manually delete the uploaded file if it exists.
-        if ($path && Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
+            // Let Laravel's global exception handler handle the error
+            throw $e;
         }
-
-        // Let Laravel's global exception handler handle the error
-        throw $e;
     }
-}
 }
