@@ -230,7 +230,7 @@ class ProductController extends Controller
     // Set primary image
     public function setPrimaryImage(Product $product, ProductImage $image)
     {
-        $this->authorize('products.update', Product::class);
+        $this->authorize('products.manage-images', Product::class);
         // Verify the image belongs to the product
         if ($image->product_id !== $product->id) {
             return response()->json(['message' => 'Image does not belong to this product'], 422);
@@ -248,7 +248,7 @@ class ProductController extends Controller
     // Remove an image
     public function removeImage(Product $product, ProductImage $image)
     {
-        $this->authorize('products.update', Product::class);
+        $this->authorize('products.manage-images', Product::class);
         // Verify the image belongs to the product
         if ($image->product_id !== $product->id) {
             return response()->json(['message' => 'Image does not belong to this product'], 422);
