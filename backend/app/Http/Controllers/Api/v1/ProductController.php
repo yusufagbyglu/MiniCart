@@ -83,10 +83,40 @@ class ProductController extends Controller
     /**
      * Get all products for admin
      */
-    public function getAllProducts()
+    public function getAllProducts(Request $request)
     {
         $this->authorize('products.view-all', Product::class);
-        return Product::all();
+
+        $query = Product::with(['category', 'images']);
+
+        // Conditionally apply filters and search
+        $query->when($request->query('search'), function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        });
+
+        $query->when($request->query('category_id'), function ($query, $categoryId) {
+            $query->where('category_id', $categoryId);
+        });
+
+        $query->when($request->has('featured'), function ($query) use ($request) {
+            $query->where('featured', $request->boolean('featured'));
+        });
+        
+        $query->when($request->has('is_active'), function ($query) use ($request) {
+            $query->where('is_active', $request->boolean('is_active'));
+        });
+
+        // Sorting
+        $sortField = $request->query('sort', 'created_at');
+        $sortDirection = $request->query('order', 'desc');
+        $query->orderBy($sortField, $sortDirection);
+
+        // Pagination
+        $perPage = $request->query('per_page', 15);
+        return ProductListResource::collection($query->paginate($perPage));
     }
 
     // Get single product with all details
