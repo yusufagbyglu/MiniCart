@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Http\Resources\ProductListResource;
 use App\Http\Resources\ProductDetailResource;
-use App\Illumunate\Support\Facades\Cache;
-use App\Illumunate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 
 use App\Models\User;
@@ -78,19 +78,6 @@ class ProductController extends Controller
         // Pagination
         $perPage = $request->query('per_page', 15);
         return ProductListResource::collection($query->paginate($perPage)); // Modified line
-    }
-
-    public function getVisibleProducts(?User $user)
-    {
-        $this->authorize('products.view', Product::class);
-        $query = Product::query();
-        
-            // For guests and customers, only show active products
-            if (!$user || !$user->hasPermission('products.view-all')) {
-                $query->where('is_active', true);
-            }
-
-            return $query;
     }
 
     /**
@@ -279,7 +266,7 @@ class ProductController extends Controller
     public function addImage(Request $request, Product $product)
 {
     // Check if the user is authorized to manage images for this product
-    $this->authorize('manageImages', $product);
+    $this->authorize('products.manage-images', $product);
 
     // Validate request data
     $request->validate([
