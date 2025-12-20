@@ -277,26 +277,54 @@ class ProductController extends Controller
     }
 
     public function addImage(Request $request, Product $product)
-    {
-        $this->authorize('products.manage-images', Product::class);
-        $validated = $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
+{
+    // Check if the user is authorized to manage images for this product
+    $this->authorize('manageImages', $product);
 
-        $imageFile = $request->file('image');
-        $path = $imageFile->store('products', 'public');
+    // Validate request data
+    $request->validate([
+        'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'is_primary' => 'sometimes|boolean',
+    ]);
 
-        $isPrimary = $request->boolean('is_primary', false);
-        if ($isPrimary) {
-            // Reset existing primary
-            $product->images()->update(['is_primary' => false]);
+    $path = null;
+
+    try {
+        DB::transaction(function () use ($request, $product, &$path) {
+
+            // Store the uploaded image
+            $path = $request->file('image')->store('products', 'public');
+
+            $isPrimary = $request->boolean('is_primary', false);
+
+            // If the new image is marked as primary,
+            // reset all existing primary images for this product
+            if ($isPrimary) {
+                $product->images()->update(['is_primary' => false]);
+            }
+
+            // Create the image record in the database
+            $product->images()->create([
+                'image_path' => $path,
+                'is_primary' => $isPrimary,
+            ]);
+        });
+
+        return response()->json([
+            'message' => 'Image added successfully'
+        ], 201);
+
+    } catch (\Throwable $e) {
+
+        // If the transaction fails, the database will be rolled back,
+        // but the file system will not.
+        // Therefore, we manually delete the uploaded file if it exists.
+        if ($path && Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
         }
 
-        $image = $product->images()->create([
-            'image_path' => $path,
-            'is_primary' => $isPrimary
-        ]);
-
-        return response()->json($image, 201);
+        // Let Laravel's global exception handler handle the error
+        throw $e;
     }
+}
 }
