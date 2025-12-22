@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Category extends Model
 {
@@ -52,7 +54,16 @@ class Category extends Model
     */
     public function hasChildren(): bool
     {
-        return $this->children()->count() > 0;
+        return $this->children()->exists();
+    }
+
+    /**
+    * Recursively retrieve all parent categories for eager loading.
+    * @return BelongsTo
+    */
+    public function parents(): BelongsTo
+    {
+        return $this->parent()->with('parents');
     }
 
     /**
@@ -67,19 +78,52 @@ class Category extends Model
     }
 
     /**
+     * Scope a query to only include root-level categories.
+     */
+    public function scopeRoots($query)
+    {
+        return $query->whereNull('parent_id');
+    }
+
+    /**
+     * Scope a query to only include categories that have children.
+     */
+    public function scopeParents($query)
+    {
+        return $query->has('children');
+    }
+
+    /**
+     * Scope a query to only include categories that do not have children (leaf nodes).
+     */
+    public function scopeLeaves($query)
+    {
+        return $query->doesntHave('children');
+    }
+
+    /**
     * Retrieves all parent categories (for breadcrumb) of the category. 
     * Example: "iPhone 15" -> "Phones" -> "Electronics"
     * @return \Illuminate\Support\Collection
     */
-    public function getAncestors(){
-        $ancestors = collect();
-        $category = $this;
-
-        while($category->parent){
-            $ancestors->push($category->parent);
-            $category = $category->parent;
+    public function getAncestors()
+    {
+        // If the parents relationship is not already loaded, load it now.
+        // This is the key to solving the N+1 problem.
+        if (!$this->relationLoaded('parents')) {
+            $this->load('parents');
         }
-
+     
+        $ancestors = collect();
+        $parent = $this->parents;
+    
+        // Traverse the pre-loaded parent relationships in memory
+        // instead of querying the database in a loop.
+        while ($parent) {
+            $ancestors->push($parent);
+            $parent = $parent->parents;
+        }
+    
         return $ancestors->reverse();
     }
 
@@ -88,8 +132,46 @@ class Category extends Model
     *
     * @return HasMany
     */
-    public function products(){
+    public function products(): HasMany{
         return $this->hasMany(Product::class);
+    }
+
+    /**
+     * Get all product from this category and all its descendants.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function allProducts()
+    {
+        $descendantIds = $this->getAllDescendantIds();
+        return Product::whereIn('category_id', $descendantIds);
+    }
+
+    /**
+     * Helper method to get all descendant category IDs including the current one.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function getAllDescendantIds(): \Illuminate\Support\Collection
+    {
+        if (!$this->relationLoaded('allChildren')) {
+            $this->load('allChildren');
+        }
+
+        $ids = collect([$this->id]);
+        
+        $collectIds = function ($categories) use (&$ids, &$collectIds) {
+            foreach ($categories as $category) {
+                $ids->push($category->id);
+                if ($category->relationLoaded('allChildren')) {
+                    $collectIds($category->allChildren);
+                }
+            }
+        };
+
+        $collectIds($this->allChildren);
+
+        return $ids->unique();
     }
 
     /**
@@ -98,7 +180,7 @@ class Category extends Model
     * @return int
     */
     public function getDepth(): int{
-        return $this->ancestors()->count();
+        return $this->getAncestors()->count();
     }
 
     /**
@@ -111,8 +193,8 @@ class Category extends Model
     {
         $ancestors = $this->getAncestors();
         $path = $ancestors->pluck('name')->push($this->name);
-
-        return $ancestors->pluck('name')->join($separator);
+    
+        return $path->join(" {$separator} ");
     }
 
 }
