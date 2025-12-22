@@ -13,6 +13,12 @@ use App\Models\Category;
 use App\Policies\CategoryPolicy;
 
 
+use App\Models\Cart;
+use App\Models\CartItem;
+use App\Policies\CartItemPolicy;
+use App\Policies\CartPolicy;
+
+
 class AuthServiceProvider extends ServiceProvider
 {
     /**
@@ -24,6 +30,8 @@ class AuthServiceProvider extends ServiceProvider
         User::class => UserPolicy::class,
         Product::class => ProductPolicy::class,
         Category::class => CategoryPolicy::class,
+        Cart::class => CartPolicy::class,
+        CartItem::class => CartItemPolicy::class,
     ];
 
     /**
