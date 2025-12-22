@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\v1\UserController;
 use App\Http\Controllers\Api\v1\AuthController;
+use App\Http\Controllers\Api\v1\CategoryController;
 use App\Http\Controllers\Api\v1\ProductController;
 
 
@@ -35,6 +36,15 @@ Route::prefix('v1')->group(function () {
        'categoryProducts']);
     // Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);      
     // Route::get('/reviews/{review}', [ReviewController::class, 'show']);
+
+    // Public Category Routes
+    Route::get('/categories', [CategoryController::class, 'index']);
+    Route::get('/categories/tree', [CategoryController::class, 'getTree']);
+    Route::get('/categories/parent-categories', [CategoryController::class, 'getParentCategories']);
+    Route::get('/categories/{category}', [CategoryController::class, 'show']);
+    Route::get('/categories/{category}/children', [CategoryController::class, 'getChildren']);
+    Route::get('/categories/{category}/descendants', [CategoryController::class, 'getDescendants']);
+    Route::get('/categories/{category}/breadcrumb', [CategoryController::class, 'getBreadcrumb']);
 
     // Protected routes
     Route::middleware('auth:sanctum')->group(function () {
@@ -71,10 +81,14 @@ Route::prefix('v1')->group(function () {
             Route::post('/products', [ProductController::class, 'store']);
             Route::put('/products/{product:slug}', [ProductController::class, 'update']);   
             Route::delete('/products/{product:slug}', [ProductController::class, 'destroy']);
-            Route::post('/products/{product:slug}/images', [ProductController::class, 'addImage']);
-            Route::delete('/products/{product:slug}/images/{image}', [ProductController::class, 'removeImage']);
-        
-    });
+                        Route::post('/products/{product:slug}/images', [ProductController::class, 'addImage']);
+                        Route::delete('/products/{product:slug}/images/{image}', [ProductController::class, 'removeImage']);
+            
+                        // Category Management
+                        Route::post('/categories', [CategoryController::class, 'store']);
+                        Route::put('/categories/{category}', [CategoryController::class, 'update']);
+                        Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+                });
     
          // Admin-Only Routes (Role: 'admin')
     Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(

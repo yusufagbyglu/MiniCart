@@ -9,7 +9,13 @@ use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
+/**
+ * @group Category Management
+ *
+ * APIs for managing categories
+ */
 class CategoryController extends Controller
 {
     public function __construct()
@@ -18,38 +24,69 @@ class CategoryController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * Display a listing of the categories.
+     *
+     * @authenticated
+     * @queryParam per_page int Records per page. Default is 15. Example: 15
+     * @response 200 {
+     *   "data": [{"id": 1, "name": "Category 1", ...}],
+     *   "current_page": 1,
+     *   "per_page": 15,
+     *   "total": 1,
+     *   "success": true
+     * }
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $categories = Category::with(['parent', 'children'])->paginate(
-            $request->input('per_page', 15)
-        );
+        $this->authorize('viewAny', Category::class);
+        
+        $categories = Category::with(['parent', 'children'])
+            ->paginate((int) $request->input('per_page', 15));
 
-        return CategoryResource::collection($categories)->additional([
-            'success' => true
-        ]);
+        return CategoryResource::collection($categories)
+            ->additional(['success' => true])
+            ->toResponse($request);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created category in storage.
+     *
+     * @authenticated
+     * @bodyParam name string required The name of the category. Example: Electronics
+     * @bodyParam parent_id int The ID of the parent category. Example: 1
+     * @response 201 {
+     *   "success": true,
+     *   "message": "Category successfully created.",
+     *   "data": {"id": 1, "name": "Electronics", ...}
+     * }
      */
     public function store(StoreCategoryRequest $request): JsonResponse
     {
+        $this->authorize('create', Category::class);
+        
         $category = Category::create($request->validated());
 
         return response()->json([
             'success' => true,
             'message' => 'Category successfully created.',
             'data' => new CategoryResource($category->load(['parent', 'children']))
-        ], 201);
+        ], Response::HTTP_CREATED);
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified category.
+     *
+     * @authenticated
+     * @urlParam category int required The ID of the category. Example: 1
+     * @response {
+     *   "success": true,
+     *   "data": {"id": 1, "name": "Electronics", ...}
+     * }
      */
     public function show(Category $category): JsonResponse
     {
+        $this->authorize('view', $category);
+        
         $category->load(['parent', 'children', 'products']);
 
         return response()->json([
@@ -59,10 +96,22 @@ class CategoryController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified category in storage.
+     *
+     * @authenticated
+     * @urlParam category int required The ID of the category. Example: 1
+     * @bodyParam name string The name of the category. Example: New Category Name
+     * @bodyParam parent_id int The ID of the new parent category. Example: 2
+     * @response {
+     *   "success": true,
+     *   "message": "Category successfully updated.",
+     *   "data": {"id": 1, "name": "New Category Name", ...}
+     * }
      */
     public function update(UpdateCategoryRequest $request, Category $category): JsonResponse
     {
+        $this->authorize('update', $category);
+
         // A category cannot be its own child - circular reference check.
         if ($request->has('parent_id')) {
             $parentId = $request->parent_id;
@@ -95,10 +144,23 @@ class CategoryController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified category from storage.
+     *
+     * @authenticated
+     * @urlParam category int required The ID of the category. Example: 1
+     * @response {
+     *   "success": true,
+     *   "message": "Category successfully deleted."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "This category cannot be deleted as it contains products."
+     * }
      */
     public function destroy(Category $category): JsonResponse
     {
+        $this->authorize('delete', $category);
+
         // Prevent deletion if there are already products in that category
         if ($category->products()->exists()) {
             return response()->json([
@@ -123,6 +185,16 @@ class CategoryController extends Controller
         ]);
     }
 
+    /**
+     * Get all direct children of a category.
+     *
+     * @authenticated
+     * @urlParam category int required The ID of the parent category. Example: 1
+     * @response {
+     *   "success": true,
+     *   "data": [{"id": 2, "name": "Subcategory 1", ...}]
+     * }
+     */
     public function getChildren(Category $category): JsonResponse
     {
         $this->authorize('view', $category);
@@ -134,6 +206,19 @@ class CategoryController extends Controller
         ]);
     }
     
+    /**
+     * Get all descendants of a category (recursive).
+     *
+     * @authenticated
+     * @urlParam category int required The ID of the parent category. Example: 1
+     * @response {
+     *   "success": true,
+     *   "data": [
+     *     {"id": 2, "name": "Child 1", ...},
+     *     {"id": 3, "name": "Grandchild 1", ...}
+     *   ]
+     * }
+     */
     public function getDescendants(Category $category): JsonResponse
     {
         $this->authorize('view', $category);
@@ -145,6 +230,19 @@ class CategoryController extends Controller
         ]);
     }
 
+    /**
+     * Get the breadcrumb trail for a category.
+     *
+     * @authenticated
+     * @urlParam category int required The ID of the category. Example: 1
+     * @response {
+     *   "success": true,
+     *   "data": [
+     *     {"id": 1, "name": "Parent"},
+     *     {"id": 2, "name": "Child"}
+     *   ]
+     * }
+     */
     public function getBreadcrumb(Category $category): JsonResponse
     {
         $this->authorize('view', $category);
@@ -157,6 +255,18 @@ class CategoryController extends Controller
         ]);
     }
 
+    /**
+     * Get all top-level (parent) categories.
+     *
+     * @authenticated
+     * @response {
+     *   "success": true,
+     *   "data": [
+     *     {"id": 1, "name": "Electronics", ...},
+     *     {"id": 2, "name": "Clothing", ...}
+     *   ]
+     * }
+     */
     public function getParentCategories(): JsonResponse
     {
         $this->authorize('viewAny', Category::class);
@@ -168,6 +278,23 @@ class CategoryController extends Controller
         ]);
     }
 
+    /**
+     * Get the complete category tree.
+     *
+     * @authenticated
+     * @response {
+     *   "success": true,
+     *   "data": [
+     *     {
+     *       "id": 1,
+     *       "name": "Electronics",
+     *       "children": [
+     *         {"id": 2, "name": "Computers", ...}
+     *       ]
+     *     }
+     *   ]
+     * }
+     */
     public function getTree(): JsonResponse
     {
         $this->authorize('viewAny', Category::class);
