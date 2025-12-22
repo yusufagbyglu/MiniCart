@@ -9,6 +9,8 @@ use App\Policies\UserPolicy;
 use App\Models\Role;
 use App\Models\Product;
 use App\Policies\ProductPolicy;
+use App\Models\Category;
+use App\Policies\CategoryPolicy;
 
 
 class AuthServiceProvider extends ServiceProvider
@@ -21,6 +23,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         User::class => UserPolicy::class,
         Product::class => ProductPolicy::class,
+        Category::class => CategoryPolicy::class,
     ];
 
     /**

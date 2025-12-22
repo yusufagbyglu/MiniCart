@@ -12,24 +12,22 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Category::class, 'category');
+    }
+
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request)
     {
-        if ($request->boolean('tree')) {
-            $categories = Category::whereNull('parent_id')
-                ->with('allChildren')
-                ->get();
-        } elseif ($request->boolean('parent_only')) {
-            $categories = Category::whereNull('parent_id')->get();
-        } else {
-            $categories = Category::with(['parent', 'children'])->get();
-        }
-        
-        return response()->json([
-            'success' => true,
-            'data' => CategoryResource::collection($categories)
+        $categories = Category::with(['parent', 'children'])->paginate(
+            $request->input('per_page', 15)
+        );
+
+        return CategoryResource::collection($categories)->additional([
+            'success' => true
         ]);
     }
 
@@ -127,6 +125,7 @@ class CategoryController extends Controller
 
     public function getChildren(Category $category): JsonResponse
     {
+        $this->authorize('view', $category);
         $children = $category->children;
 
         return response()->json([
@@ -137,6 +136,7 @@ class CategoryController extends Controller
     
     public function getDescendants(Category $category): JsonResponse
     {
+        $this->authorize('view', $category);
         $descendants = $category->allChildren;
 
         return response()->json([
@@ -147,6 +147,7 @@ class CategoryController extends Controller
 
     public function getBreadcrumb(Category $category): JsonResponse
     {
+        $this->authorize('view', $category);
         $ancestors = $category->getAncestors();
         $breadcrumb = $ancestors->push($category);
 
@@ -158,6 +159,7 @@ class CategoryController extends Controller
 
     public function getParentCategories(): JsonResponse
     {
+        $this->authorize('viewAny', Category::class);
         $categories = Category::whereNull('parent_id')->get();
         
         return response()->json([
@@ -168,6 +170,7 @@ class CategoryController extends Controller
 
     public function getTree(): JsonResponse
     {
+        $this->authorize('viewAny', Category::class);
         $categories = Category::whereNull('parent_id')
             ->with('allChildren')
             ->get();
