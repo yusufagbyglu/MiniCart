@@ -1,6 +1,8 @@
-## API ENDPOINT TASARIMLARI (v1)
+## API Endpoints (v1)
+
+This document outlines the v1 API endpoints for the MiniCart application.
+
 ### Auth Endpoints
-text
 
 ```
 POST    /api/v1/auth/register
@@ -12,8 +14,8 @@ POST    /api/v1/auth/reset-password
 GET     /api/v1/auth/email/verify/{id}/{hash}
 POST    /api/v1/auth/email/verification-notification
 ```
+
 ### User Endpoints
-text
 
 ```
 GET     /api/v1/user/profile
@@ -29,23 +31,29 @@ GET     /api/v1/user/wishlist
 POST    /api/v1/user/wishlist/{productId}
 DELETE  /api/v1/user/wishlist/{productId}
 ```
-### Product Endpoints
-text
+
+### Product & Category Endpoints
 
 ```
+# Public Product Routes
 GET     /api/v1/products
-POST    /api/v1/products (admin)
+GET     /api/v1/products/search
 GET     /api/v1/products/{slug}
+
+# Public Category Routes
+GET     /api/v1/categories
+GET     /api/v1/categories/{slug}
+GET     /api/v1/categories/{slug}/products
+
+# Admin Product Routes
+POST    /api/v1/products (admin)
 PUT     /api/v1/products/{id} (admin)
 DELETE  /api/v1/products/{id} (admin)
-GET     /api/v1/products/search
-GET     /api/v1/products/categories
-GET     /api/v1/products/categories/{id}/products
 POST    /api/v1/products/{id}/images (admin)
 DELETE  /api/v1/products/{id}/images/{imageId} (admin)
 ```
+
 ### Cart Endpoints
-text
 
 ```
 GET     /api/v1/cart
@@ -54,39 +62,36 @@ PUT     /api/v1/cart/items/{itemId}
 DELETE  /api/v1/cart/items/{itemId}
 POST    /api/v1/cart/apply-coupon
 DELETE  /api/v1/cart/remove-coupon
-GET     /api/v1/cart/summary
 ```
+
 ### Order Endpoints
-text
 
 ```
 POST    /api/v1/orders/checkout
 GET     /api/v1/orders
 GET     /api/v1/orders/{orderNumber}
 POST    /api/v1/orders/{orderNumber}/cancel
-POST    /api/v1/orders/{orderNumber}/return
-GET     /api/v1/orders/{orderNumber}/invoice
 ```
+
 ### Payment Endpoints
-text
 
 ```
-POST    /api/v1/payments/{orderId}/process
+POST    /api/v1/payments/process
 GET     /api/v1/payments/{orderId}/status
-POST    /api/v1/payments/{paymentId}/refund (admin)
 ```
+
 ### Review Endpoints
-text
 
 ```
 GET     /api/v1/products/{productId}/reviews
 POST    /api/v1/products/{productId}/reviews
-PUT     /api/v1/reviews/{reviewId}
-DELETE  /api/v1/reviews/{reviewId}
-POST    /api/v1/admin/reviews/{reviewId}/approve (admin)
+PUT     /api/v1/reviews/{reviewId} (owner)
+DELETE  /api/v1/reviews/{reviewId} (owner or admin)
 ```
+
+---
+
 ### Admin Endpoints
-text
 
 ```
 # User Management
@@ -94,10 +99,26 @@ GET     /api/v1/admin/users
 GET     /api/v1/admin/users/{id}
 PUT     /api/v1/admin/users/{id}
 DELETE  /api/v1/admin/users/{id}
+POST    /api/v1/admin/users/{id}/assign-roles
+
+# Role & Permission Management
+GET     /api/v1/admin/roles
+POST    /api/v1/admin/roles
+PUT     /api/v1/admin/roles/{id}
+DELETE  /api/v1/admin/roles/{id}
+GET     /api/v1/admin/permissions
+POST    /api/v1/admin/roles/{id}/assign-permissions
+
+# Category Management
+POST    /api/v1/admin/categories
+PUT     /api/v1/admin/categories/{id}
+DELETE  /api/v1/admin/categories/{id}
 
 # Order Management
 GET     /api/v1/admin/orders
+GET     /api/v1/admin/orders/{id}
 PUT     /api/v1/admin/orders/{id}/status
+POST    /api/v1/admin/orders/{id}/shipping
 GET     /api/v1/admin/orders/stats
 
 # Product Management
@@ -107,12 +128,30 @@ POST    /api/v1/admin/products/import
 # Coupon Management
 GET     /api/v1/admin/coupons
 POST    /api/v1/admin/coupons
+GET     /api/v1/admin/coupons/{id}
 PUT     /api/v1/admin/coupons/{id}
 DELETE  /api/v1/admin/coupons/{id}
 
 # Tax Management
+GET     /api/v1/admin/tax-classes
+POST    /api/v1/admin/tax-classes
+PUT     /api/v1/admin/tax-classes/{id}
+DELETE  /api/v1/admin/tax-classes/{id}
+
 GET     /api/v1/admin/tax-rates
 POST    /api/v1/admin/tax-rates
 PUT     /api/v1/admin/tax-rates/{id}
 DELETE  /api/v1/admin/tax-rates/{id}
+
+GET     /api/v1/admin/tax-rules
+POST    /api/v1/admin/tax-rules
+PUT     /api/v1/admin/tax-rules/{id}
+DELETE  /api/v1/admin/tax-rules/{id}
+
+# Review Management
+POST    /api/v1/admin/reviews/{reviewId}/approve
+DELETE  /api/v1/admin/reviews/{reviewId}
+
+# Payment Management
+POST    /api/v1/admin/payments/{paymentId}/refund
 ```
