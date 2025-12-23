@@ -54,6 +54,7 @@ class Category extends Model
     */
     public function hasChildren(): bool
     {
+        $this->whenLoaded('children', fn () => $this->children()->exists());
         return $this->children()->exists();
     }
 
@@ -108,11 +109,7 @@ class Category extends Model
     */
     public function getAncestors()
     {
-        // If the parents relationship is not already loaded, load it now.
-        // This is the key to solving the N+1 problem.
-        if (!$this->relationLoaded('parents')) {
-            $this->load('parents');
-        }
+        
      
         $ancestors = collect();
         $parent = $this->parents;
@@ -120,11 +117,11 @@ class Category extends Model
         // Traverse the pre-loaded parent relationships in memory
         // instead of querying the database in a loop.
         while ($parent) {
-            $ancestors->push($parent);
+            $ancestors->prepend($parent);
             $parent = $parent->parents;
         }
-    
-        return $ancestors->reverse();
+
+        return $ancestors;
     }
 
     /**

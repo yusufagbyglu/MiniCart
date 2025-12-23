@@ -18,7 +18,8 @@ return new class extends Migration
             $table->foreignId('parent_id')
                   ->nullable()
                   ->constrained('categories')
-                  ->onDelete('cascade'); 
+                  ->onDelete('restrict');
+                  // Or onDelete('set null'); based on your requirements
 
             $table->timestamps();
             $table->softDeletes();

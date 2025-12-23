@@ -32,7 +32,7 @@ class CategoryResource extends JsonResource
             'products_count' => $this->whenCounted('products'),
 
             'is_parent' => $this->isParent(),
-            'has_children' => $this->hasChildren(),
+            'has_children' => $this->whenLoaded('children', $this->children()->exists()),
             'depth' => $this->getDepth(),
             'path' => $this->path,
 
