@@ -17,6 +17,8 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Policies\CartItemPolicy;
 use App\Policies\CartPolicy;
+use App\Models\UserAddress;
+use App\Policies\UserAddressPolicy;
 
 
 class AuthServiceProvider extends ServiceProvider
@@ -32,6 +34,7 @@ class AuthServiceProvider extends ServiceProvider
         Category::class => CategoryPolicy::class,
         Cart::class => CartPolicy::class,
         CartItem::class => CartItemPolicy::class,
+        UserAddress::class => UserAddressPolicy::class,
     ];
 
     /**
