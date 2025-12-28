@@ -13,7 +13,7 @@ class CartPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('carts.view-all');
     }
 
     /**
