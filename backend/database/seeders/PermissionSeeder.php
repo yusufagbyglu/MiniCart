@@ -84,7 +84,11 @@ class PermissionSeeder extends Seeder
             // Cart Management
             ['name' => 'cart.manage-own', 'description' => 'Manage own cart'],
             ['name' => 'cart.view-all', 'description' => 'View all user carts'],
-            
+            ['name' => 'cart.create', 'description' => 'Create a new cart'],
+            ['name' => 'cart.clear', 'description' => 'Clear cart contents'],
+            ['name' => 'cart.transfer', 'description' => 'Transfer cart between users'],
+            ['name' => 'cart.apply-coupon', 'description' => 'Apply coupons to cart'],
+
             // Coupon Management
             ['name' => 'coupons.view', 'description' => 'View coupons list and details'],
             ['name' => 'coupons.create', 'description' => 'Create new coupons'],
