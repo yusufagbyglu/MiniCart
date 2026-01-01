@@ -129,7 +129,8 @@ product_image [color: "blue"] {
 -- Cart
 cart [color: "purple"] {
   id pk
-  user_id fk > user.id
+  user_id fk > user.id?
+  session_id string?
   created_at timestamp
   updated_at timestamp
 }
@@ -139,6 +140,7 @@ cart_item {
   cart_id fk > cart.id
   product_id fk > product.id
   quantity integer
+  price decimal(10,2)
   created_at timestamp
   updated_at timestamp
   unique(cart_id, product_id)

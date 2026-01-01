@@ -16,7 +16,7 @@ class Cart extends Model
      */
     use HasFactory;
 
-    protected $fillable = ['user_id'];
+    protected $fillable = ['user_id', 'session_id'];
 
     /**
      * Get the user that owns the cart.

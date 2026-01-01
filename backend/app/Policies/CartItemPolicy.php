@@ -21,7 +21,7 @@ class CartItemPolicy
      */
     public function view(User $user, CartItem $cartItem): bool
     {
-        return false;
+        return $user->id === $cartItem->cart->user_id;
     }
 
     /**
@@ -29,7 +29,7 @@ class CartItemPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('cart.manage-own');
     }
 
     /**
