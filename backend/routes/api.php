@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\v1\AuthController;
 use App\Http\Controllers\Api\v1\CategoryController;
 use App\Http\Controllers\Api\v1\ProductController;
 use App\Http\Controllers\Api\v1\CartController;
+use App\Http\Controllers\Api\v1\OrderController;
 
 
 /*
@@ -76,6 +77,15 @@ Route::prefix('v1')->group(function () {
         });
         Route::put('/user/profile', [AuthController::class, 'updateProfile']);
         Route::put('/user/password', [AuthController::class, 'updatePassword']);
+
+        // User Addresses
+        Route::apiResource('/user/addresses', \App\Http\Controllers\Api\v1\UserAddressController::class);
+
+        // Order Routes
+        Route::post('/orders/checkout', [OrderController::class, 'checkout']);
+        Route::get('/orders', [OrderController::class, 'index']);
+        Route::get('/orders/{orderNumber}', [OrderController::class, 'show']);
+        Route::post('/orders/{orderNumber}/cancel', [OrderController::class, 'cancel']);
 
     });
 
