@@ -16,7 +16,7 @@ class Cart extends Model
      */
     use HasFactory;
 
-    protected $fillable = ['user_id', 'session_id'];
+    protected $fillable = ['user_id', 'session_id', 'coupon_id'];
 
     /**
      * Get the user that owns the cart.
@@ -24,6 +24,14 @@ class Cart extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the coupon associated with the cart.
+     */
+    public function coupon(): BelongsTo
+    {
+        return $this->belongsTo(Coupon::class);
     }
 
     /**

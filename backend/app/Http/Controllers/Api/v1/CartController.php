@@ -5,114 +5,194 @@ namespace App\Http\Controllers\Api\v1;
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\Coupon;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Carbon\Carbon;
 
 class CartController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(): JsonResponse
+    private function getCart(Request $request)
     {
-        $cart = Cart::with(['items.product'])
-            ->firstOrCreate(['user_id' => Auth::id()]);
-        return response()->json(
-            [
-                'success' => true,
-                'data' => $cart
-            ]
-        );
+        $user = Auth::guard('sanctum')->user();
+        if ($user) {
+            return Cart::with(['items.product', 'coupon'])->firstOrCreate(['user_id' => $user->id]);
+        }
+
+        $sessionId = $request->header('X-Session-ID') ?? $request->input('session_id');
+
+        if ($sessionId) {
+            return Cart::with(['items.product', 'coupon'])->firstOrCreate(['session_id' => $sessionId]);
+        }
+
+        return null;
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    public function index(Request $request): JsonResponse
+    {
+        $cart = $this->getCart($request);
+
+        if (!$cart) {
+            // If no cart found (e.g. guest without session), return empty structure
+            return response()->json([
+                'success' => true,
+                'data' => null
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $cart
+        ]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1'
+            'quantity' => 'required|integer|min:1',
+            'session_id' => 'nullable|string'
         ]);
-        $cart = Cart::firstOrCreate(['user_id' => Auth::id()]);
-        // Check if product already in cart
-        $cartItem = $cart->items()->where('product_id', $validated['product_id'])->first();
+
+        $cart = $this->getCart($request);
+
+        if (!$cart) {
+            if ($request->input('session_id')) {
+                $cart = Cart::create(['session_id' => $request->input('session_id')]);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Session ID required for guest users'], 400);
+            }
+        }
+
+        $product = Product::findOrFail($validated['product_id']);
+
+        $cartItem = $cart->items()->where('product_id', $product->id)->first();
+
         if ($cartItem) {
             $cartItem->increment('quantity', $validated['quantity']);
         } else {
             $cart->items()->create([
-                'product_id' => $validated['product_id'],
-                'quantity' => $validated['quantity']
+                'product_id' => $product->id,
+                'quantity' => $validated['quantity'],
+                'price' => $product->price
             ]);
         }
+
         return response()->json([
             'success' => true,
             'message' => 'Item added to cart',
-            'data' => $cart->load('items.product')
+            'data' => $cart->fresh(['items.product', 'coupon'])
         ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Cart $cart): JsonResponse
+    public function update(Request $request, $itemId): JsonResponse
     {
-        $this->authorize('view', $cart);
-        return response()->json(
-            [
-                'success' => true,
-                'data' => $cart->load('items.product')
-            ]
-        );
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, CartItem $cartItem): JsonResponse
-    {
-        $this->authorize('update', $cartItem);
-        
         $validated = $request->validate([
             'quantity' => 'required|integer|min:1'
         ]);
+
+        $cart = $this->getCart($request);
+        if (!$cart) {
+            return response()->json(['success' => false, 'message' => 'Cart not found'], 404);
+        }
+
+        $cartItem = $cart->items()->where('id', $itemId)->first();
+        if (!$cartItem) {
+            return response()->json(['success' => false, 'message' => 'Item not found in cart'], 404);
+        }
+
         $cartItem->update(['quantity' => $validated['quantity']]);
+
         return response()->json([
             'success' => true,
             'message' => 'Cart updated',
-            'data' => $cartItem->cart->load('items.product')
+            'data' => $cart->fresh(['items.product', 'coupon'])
         ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(CartItem $cartItem): JsonResponse
+    public function destroy(Request $request, $itemId): JsonResponse
     {
-        $this->authorize('delete', $cartItem);
-        
-        $cartItem->delete();
+        $cart = $this->getCart($request);
+        if (!$cart) {
+            return response()->json(['success' => false, 'message' => 'Cart not found'], 404);
+        }
+
+        $cartItem = $cart->items()->where('id', $itemId)->first();
+
+        if ($cartItem) {
+            $cartItem->delete();
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Item removed from cart'
+            'message' => 'Item removed from cart',
+            'data' => $cart->fresh(['items.product', 'coupon'])
         ]);
     }
 
-    /**
-     * Clear all items from the cart.
-     */
-    public function clear(Cart $cart): JsonResponse
+    public function applyCoupon(Request $request): JsonResponse
     {
-        $this->authorize('update', $cart);
-        
-        $cart->items()->delete();
-        
+        $validated = $request->validate([
+            'code' => 'required|string'
+        ]);
+
+        $cart = $this->getCart($request);
+        if (!$cart) {
+            return response()->json(['success' => false, 'message' => 'Cart not found'], 404);
+        }
+
+        $coupon = Coupon::where('code', $validated['code'])->first();
+
+        if (!$coupon) {
+            return response()->json(['success' => false, 'message' => 'Invalid coupon code'], 404);
+        }
+
+        // Validity checks
+        $now = Carbon::now();
+        if (
+            !$coupon->is_active ||
+            ($coupon->valid_from && $now->lt($coupon->valid_from)) ||
+            ($coupon->valid_until && $now->gt($coupon->valid_until))
+        ) {
+            return response()->json(['success' => false, 'message' => 'Coupon provided is not active or expired'], 400);
+        }
+
+        if ($coupon->max_uses && $coupon->used_count >= $coupon->max_uses) {
+            return response()->json(['success' => false, 'message' => 'Coupon usage limit reached'], 400);
+        }
+
+        // Check min order amount?
+        // Need to calculate cart total first.
+        $total = $cart->items->sum(function ($item) {
+            return $item->quantity * $item->price;
+        });
+
+        if ($coupon->min_order_amount && $total < $coupon->min_order_amount) {
+            return response()->json(['success' => false, 'message' => 'Minimum order amount not met for this coupon'], 400);
+        }
+
+        $cart->update(['coupon_id' => $coupon->id]);
+
         return response()->json([
             'success' => true,
-            'message' => 'Cart cleared'
+            'message' => 'Coupon applied',
+            'data' => $cart->fresh(['items.product', 'coupon'])
+        ]);
+    }
+
+    public function removeCoupon(Request $request): JsonResponse
+    {
+        $cart = $this->getCart($request);
+        if ($cart) {
+            $cart->update(['coupon_id' => null]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Coupon removed',
+            'data' => $cart ? $cart->fresh(['items.product', 'coupon']) : null
         ]);
     }
 }

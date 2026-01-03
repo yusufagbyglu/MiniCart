@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\v1\UserController;
 use App\Http\Controllers\Api\v1\AuthController;
 use App\Http\Controllers\Api\v1\CategoryController;
 use App\Http\Controllers\Api\v1\ProductController;
+use App\Http\Controllers\Api\v1\CartController;
 
 
 /*
@@ -31,9 +32,11 @@ Route::prefix('v1')->group(function () {
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/products/search', [ProductController::class, 'search']);
     Route::get('/products/{product:slug}', [ProductController::class, 'show']);
-    Route::get('/products/categories', [ProductController::class, 'categories']);       
-    Route::get('/products/categories/{category}/products', [ProductController::class,   
-       'categoryProducts']);
+    Route::get('/products/categories', [ProductController::class, 'categories']);
+    Route::get('/products/categories/{category}/products', [
+        ProductController::class,
+        'categoryProducts'
+    ]);
     // Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);      
     // Route::get('/reviews/{review}', [ReviewController::class, 'show']);
 
@@ -45,6 +48,16 @@ Route::prefix('v1')->group(function () {
     Route::get('/categories/{category}/children', [CategoryController::class, 'getChildren']);
     Route::get('/categories/{category}/descendants', [CategoryController::class, 'getDescendants']);
     Route::get('/categories/{category}/breadcrumb', [CategoryController::class, 'getBreadcrumb']);
+
+    // Cart Routes
+    Route::prefix('cart')->group(function () {
+        Route::get('/', [CartController::class, 'index']);
+        Route::post('/items', [CartController::class, 'store']);
+        Route::put('/items/{itemId}', [CartController::class, 'update']);
+        Route::delete('/items/{itemId}', [CartController::class, 'destroy']);
+        Route::post('/apply-coupon', [CartController::class, 'applyCoupon']);
+        Route::delete('/remove-coupon', [CartController::class, 'removeCoupon']);
+    });
 
     // Protected routes
     Route::middleware('auth:sanctum')->group(function () {
@@ -67,39 +80,39 @@ Route::prefix('v1')->group(function () {
     });
 
     // Admin routes
-    Route::middleware(['auth:sanctum', 'role:support,admin'])->prefix('support')->group 
-        (function () {
-            // Support can manage all reviews, not just their own.
-            // Route::put('/reviews/{review}', [ReviewController::class, 'update']);        
-            // Route::delete('/reviews/{review}', [ReviewController::class, 'destroy']);    
+    Route::middleware(['auth:sanctum', 'role:support,admin'])->prefix('support')->group
+    (function () {
+        // Support can manage all reviews, not just their own.
+        // Route::put('/reviews/{review}', [ReviewController::class, 'update']);        
+        // Route::delete('/reviews/{review}', [ReviewController::class, 'destroy']);    
     });
-        
-             // Shop Manager Routes (Role: 'shop-manager' or 'admin')
+
+    // Shop Manager Routes (Role: 'shop-manager' or 'admin')
     Route::middleware(['auth:sanctum', 'role:shop-manager,admin'])->prefix('management')->group
-        (function () {
-                 // Product Management
-            Route::post('/products', [ProductController::class, 'store']);
-            Route::put('/products/{product:slug}', [ProductController::class, 'update']);   
-            Route::delete('/products/{product:slug}', [ProductController::class, 'destroy']);
-                        Route::post('/products/{product:slug}/images', [ProductController::class, 'addImage']);
-                        Route::delete('/products/{product:slug}/images/{image}', [ProductController::class, 'removeImage']);
-            
-                        // Category Management
-                        Route::post('/categories', [CategoryController::class, 'store']);
-                        Route::put('/categories/{category}', [CategoryController::class, 'update']);
-                        Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
-                });
-    
-         // Admin-Only Routes (Role: 'admin')
+    (function () {
+        // Product Management
+        Route::post('/products', [ProductController::class, 'store']);
+        Route::put('/products/{product:slug}', [ProductController::class, 'update']);
+        Route::delete('/products/{product:slug}', [ProductController::class, 'destroy']);
+        Route::post('/products/{product:slug}/images', [ProductController::class, 'addImage']);
+        Route::delete('/products/{product:slug}/images/{image}', [ProductController::class, 'removeImage']);
+
+        // Category Management
+        Route::post('/categories', [CategoryController::class, 'store']);
+        Route::put('/categories/{category}', [CategoryController::class, 'update']);
+        Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+    });
+
+    // Admin-Only Routes (Role: 'admin')
     Route::middleware(['auth:sanctum', 'role:admin'])->prefix('admin')->group(
-        function ()
-        {
+        function () {
             // User Management
             Route::apiResource('users', UserController::class);
-    
+
             // Site-wide Statistics & Imports
             Route::get('/products/stats', [ProductController::class, 'stats']);
             Route::post('/products/import', [ProductController::class, 'import']);
             // Route::get('/orders/stats', [OrderController::class, 'stats']);
-        });
+        }
+    );
 });
