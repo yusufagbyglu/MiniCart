@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Http\Resources\CartResource;
 
 class CartController extends Controller
 {
@@ -48,7 +49,7 @@ class CartController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $cart
+            'data' => new CartResource($cart)
         ]);
     }
 
@@ -91,7 +92,7 @@ class CartController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Item added to cart',
-            'data' => $cart->fresh(['items.product', 'coupon'])
+            'data' => new CartResource($cart->fresh(['items.product', 'coupon']))
         ], 201);
     }
 
@@ -120,7 +121,7 @@ class CartController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Cart updated',
-            'data' => $cart->fresh(['items.product', 'coupon'])
+            'data' => new CartResource($cart->fresh(['items.product', 'coupon']))
         ]);
     }
 
@@ -143,7 +144,7 @@ class CartController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Item removed from cart',
-            'data' => $cart->fresh(['items.product', 'coupon'])
+            'data' => new CartResource($cart->fresh(['items.product', 'coupon']))
         ]);
     }
 
@@ -197,7 +198,7 @@ class CartController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Coupon applied',
-            'data' => $cart->fresh(['items.product', 'coupon'])
+            'data' => new CartResource($cart->fresh(['items.product', 'coupon']))
         ]);
     }
 
@@ -214,7 +215,7 @@ class CartController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Coupon removed',
-            'data' => $cart ? $cart->fresh(['items.product', 'coupon']) : null
+            'data' => $cart ? new CartResource($cart->fresh(['items.product', 'coupon'])) : null
         ]);
     }
 }

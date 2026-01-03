@@ -21,6 +21,9 @@ class CartPolicy
      */
     public function view(User $user, Cart $cart): bool
     {
+        if ($user->hasPermissionTo('cart.view-all')) {
+            return true;
+        }
         return $user->id === $cart->user_id && $user->hasPermissionTo('cart.manage-own');
     }
 
@@ -29,7 +32,8 @@ class CartPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('cart.manage-own');
+        // Support/Admin or Customer
+        return $user->hasPermissionTo('cart.manage-own') || $user->hasPermissionTo('cart.view-all');
     }
 
     /**
@@ -37,6 +41,19 @@ class CartPolicy
      */
     public function update(User $user, Cart $cart): bool
     {
+        // Assuming 'view-all' implies support capabilities, or we could add a specific 'cart.manage-any' permission if desired.
+        // For now, let's stick to strict ownership for updates unless we add a specific 'cart.manage-all' permission.
+        // Checking PermissionSeeder, we assume admins/support might need to inspect but not necessarily modify customer carts actively via API unless acting AS them.
+        // However, usually support might need to clear a stuck cart.
+
+        // Let's check PermissionSeeder again via reasoning:
+        // 'cart.view-all' exists. 'cart.manage-own' exists.
+        // Admin usually has all permissions.
+
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
         return $user->id === $cart->user_id && $user->hasPermissionTo('cart.manage-own');
     }
 
@@ -45,6 +62,9 @@ class CartPolicy
      */
     public function delete(User $user, Cart $cart): bool
     {
+        if ($user->hasRole('admin')) {
+            return true;
+        }
         return $user->id === $cart->user_id && $user->hasPermissionTo('cart.manage-own');
     }
 
@@ -53,7 +73,7 @@ class CartPolicy
      */
     public function restore(User $user, Cart $cart): bool
     {
-        return $user->hasPermissionTo('cart.manage-own');
+        return $user->hasPermissionTo('cart.manage-own') || $user->hasRole('admin');
     }
 
     /**
@@ -61,6 +81,6 @@ class CartPolicy
      */
     public function forceDelete(User $user, Cart $cart): bool
     {
-        return $user->hasPermissionTo('cart.manage-own');
+        return $user->hasRole('admin');
     }
 }

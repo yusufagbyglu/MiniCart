@@ -21,6 +21,9 @@ class CartItemPolicy
      */
     public function view(User $user, CartItem $cartItem): bool
     {
+        if ($user->hasPermissionTo('cart.view-all')) {
+            return true;
+        }
         return $user->id === $cartItem->cart->user_id && $user->hasPermissionTo('cart.manage-own');
     }
 
@@ -29,7 +32,7 @@ class CartItemPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('cart.manage-own');
+        return $user->hasPermissionTo('cart.manage-own') || $user->hasRole('admin');
     }
 
     /**
@@ -37,6 +40,9 @@ class CartItemPolicy
      */
     public function update(User $user, CartItem $cartItem): bool
     {
+        if ($user->hasRole('admin')) {
+            return true;
+        }
         return $user->id === $cartItem->cart->user_id && $user->hasPermissionTo('cart.manage-own');
     }
 
@@ -45,6 +51,9 @@ class CartItemPolicy
      */
     public function delete(User $user, CartItem $cartItem): bool
     {
+        if ($user->hasRole('admin')) {
+            return true;
+        }
         return $user->id === $cartItem->cart->user_id && $user->hasPermissionTo('cart.manage-own');
     }
 
@@ -53,7 +62,7 @@ class CartItemPolicy
      */
     public function restore(User $user, CartItem $cartItem): bool
     {
-        return false;
+        return $user->hasRole('admin');
     }
 
     /**
@@ -61,6 +70,6 @@ class CartItemPolicy
      */
     public function forceDelete(User $user, CartItem $cartItem): bool
     {
-        return false;
+        return $user->hasRole('admin');
     }
 }
