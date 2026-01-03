@@ -42,6 +42,10 @@ class CartController extends Controller
             ]);
         }
 
+        if ($cart->user_id) {
+            $this->authorize('view', $cart);
+        }
+
         return response()->json([
             'success' => true,
             'data' => $cart
@@ -64,6 +68,10 @@ class CartController extends Controller
             } else {
                 return response()->json(['success' => false, 'message' => 'Session ID required for guest users'], 400);
             }
+        }
+
+        if ($cart->user_id) {
+            $this->authorize('update', $cart); // Treating adding item as updating cart
         }
 
         $product = Product::findOrFail($validated['product_id']);
@@ -103,6 +111,10 @@ class CartController extends Controller
             return response()->json(['success' => false, 'message' => 'Item not found in cart'], 404);
         }
 
+        if ($cart->user_id) {
+            $this->authorize('update', $cartItem);
+        }
+
         $cartItem->update(['quantity' => $validated['quantity']]);
 
         return response()->json([
@@ -122,6 +134,9 @@ class CartController extends Controller
         $cartItem = $cart->items()->where('id', $itemId)->first();
 
         if ($cartItem) {
+            if ($cart->user_id) {
+                $this->authorize('delete', $cartItem);
+            }
             $cartItem->delete();
         }
 
@@ -141,6 +156,10 @@ class CartController extends Controller
         $cart = $this->getCart($request);
         if (!$cart) {
             return response()->json(['success' => false, 'message' => 'Cart not found'], 404);
+        }
+
+        if ($cart->user_id) {
+            $this->authorize('update', $cart);
         }
 
         $coupon = Coupon::where('code', $validated['code'])->first();
@@ -186,6 +205,9 @@ class CartController extends Controller
     {
         $cart = $this->getCart($request);
         if ($cart) {
+            if ($cart->user_id) {
+                $this->authorize('update', $cart);
+            }
             $cart->update(['coupon_id' => null]);
         }
 

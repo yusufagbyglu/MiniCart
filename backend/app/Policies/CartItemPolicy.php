@@ -21,7 +21,7 @@ class CartItemPolicy
      */
     public function view(User $user, CartItem $cartItem): bool
     {
-        return $user->id === $cartItem->cart->user_id;
+        return $user->id === $cartItem->cart->user_id && $user->hasPermissionTo('cart.manage-own');
     }
 
     /**
@@ -37,7 +37,7 @@ class CartItemPolicy
      */
     public function update(User $user, CartItem $cartItem): bool
     {
-        return $user->id === $cartItem->cart->user_id;
+        return $user->id === $cartItem->cart->user_id && $user->hasPermissionTo('cart.manage-own');
     }
 
     /**
@@ -45,7 +45,7 @@ class CartItemPolicy
      */
     public function delete(User $user, CartItem $cartItem): bool
     {
-        return $user->id === $cartItem->cart->user_id;
+        return $user->id === $cartItem->cart->user_id && $user->hasPermissionTo('cart.manage-own');
     }
 
     /**
