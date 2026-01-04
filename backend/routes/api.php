@@ -8,6 +8,9 @@ use App\Http\Controllers\Api\v1\CategoryController;
 use App\Http\Controllers\Api\v1\ProductController;
 use App\Http\Controllers\Api\v1\CartController;
 use App\Http\Controllers\Api\v1\OrderController;
+use App\Http\Controllers\Api\v1\ReviewController;
+use App\Http\Controllers\Api\v1\WishlistController;
+use App\Http\Controllers\Api\v1\PaymentController;
 
 
 /*
@@ -38,7 +41,7 @@ Route::prefix('v1')->group(function () {
         ProductController::class,
         'categoryProducts'
     ]);
-    // Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);      
+    Route::get('/products/{product}/reviews', [ReviewController::class, 'index']);
     // Route::get('/reviews/{review}', [ReviewController::class, 'show']);
 
     // Public Category Routes
@@ -86,6 +89,20 @@ Route::prefix('v1')->group(function () {
         Route::get('/orders', [OrderController::class, 'index']);
         Route::get('/orders/{orderNumber}', [OrderController::class, 'show']);
         Route::post('/orders/{orderNumber}/cancel', [OrderController::class, 'cancel']);
+
+        // Payment Routes
+        Route::post('/payments/process', [PaymentController::class, 'process']);
+        Route::get('/payments/{orderId}/status', [PaymentController::class, 'status']);
+
+        // Review Routes
+        Route::post('/products/{product}/reviews', [ReviewController::class, 'store']);
+        Route::put('/reviews/{review}', [ReviewController::class, 'update']);
+        Route::delete('/reviews/{review}', [ReviewController::class, 'destroy']);
+
+        // Wishlist Routes
+        Route::get('/user/wishlist', [WishlistController::class, 'index']);
+        Route::post('/user/wishlist/{productId}', [WishlistController::class, 'store']);
+        Route::delete('/user/wishlist/{productId}', [WishlistController::class, 'destroy']);
 
     });
 
