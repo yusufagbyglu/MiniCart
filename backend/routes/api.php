@@ -13,6 +13,11 @@ use App\Http\Controllers\Api\v1\WishlistController;
 use App\Http\Controllers\Api\v1\PaymentController;
 
 
+use App\Http\Controllers\Api\v1\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Api\v1\Admin\CouponController;
+use App\Http\Controllers\Api\v1\Admin\TaxRateController;
+use App\Http\Controllers\Api\v1\RoleController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -135,11 +140,29 @@ Route::prefix('v1')->group(function () {
         function () {
             // User Management
             Route::apiResource('users', UserController::class);
+            Route::post('/users/{user}/roles', [UserController::class, 'assignRole']);
+            Route::delete('/users/{user}/roles/{role}', [UserController::class, 'removeRole']);
 
-            // Site-wide Statistics & Imports
+            // Role Management
+            Route::apiResource('roles', RoleController::class);
+            Route::post('/roles/{role}/permissions', [RoleController::class, 'assignPermission']);
+            Route::delete('/roles/{role}/permissions/{permission}', [RoleController::class, 'removePermission']);
+
+            // Admin Order Management
+            Route::get('/orders/stats', [AdminOrderController::class, 'stats']);
+            Route::get('/orders', [AdminOrderController::class, 'index']);
+            Route::get('/orders/{id}', [AdminOrderController::class, 'show']);
+            Route::put('/orders/{id}/status', [AdminOrderController::class, 'updateStatus']);
+
+            // Coupon Management
+            Route::apiResource('coupons', CouponController::class);
+
+            // Tax Management
+            Route::apiResource('tax-rates', TaxRateController::class);
+
+            // Site-wide Statistics & Imports (Existing)
             Route::get('/products/stats', [ProductController::class, 'stats']);
             Route::post('/products/import', [ProductController::class, 'import']);
-            // Route::get('/orders/stats', [OrderController::class, 'stats']);
         }
     );
 });
