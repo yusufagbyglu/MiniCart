@@ -11,9 +11,12 @@ class CartItemPolicy
     /**
      * Determine whether the user can view any models.
      */
+    /**
+     * Determine whether the user can view any models.
+     */
     public function viewAny(User $user): bool
     {
-        return false;
+        return $user->hasPermissionTo('cart-items.view');
     }
 
     /**
@@ -24,7 +27,7 @@ class CartItemPolicy
         if ($user->hasPermissionTo('cart.view-all')) {
             return true;
         }
-        return $user->id === $cartItem->cart->user_id && $user->hasPermissionTo('cart.manage-own');
+        return $user->id === $cartItem->cart->user_id && ($user->hasPermissionTo('cart-items.view') || $user->hasPermissionTo('cart.manage-own'));
     }
 
     /**
@@ -32,7 +35,7 @@ class CartItemPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasPermissionTo('cart.manage-own') || $user->hasRole('admin');
+        return $user->hasPermissionTo('cart-items.add');
     }
 
     /**
@@ -43,7 +46,7 @@ class CartItemPolicy
         if ($user->hasRole('admin')) {
             return true;
         }
-        return $user->id === $cartItem->cart->user_id && $user->hasPermissionTo('cart.manage-own');
+        return $user->id === $cartItem->cart->user_id && $user->hasPermissionTo('cart-items.update');
     }
 
     /**
@@ -54,7 +57,7 @@ class CartItemPolicy
         if ($user->hasRole('admin')) {
             return true;
         }
-        return $user->id === $cartItem->cart->user_id && $user->hasPermissionTo('cart.manage-own');
+        return $user->id === $cartItem->cart->user_id && $user->hasPermissionTo('cart-items.remove');
     }
 
     /**

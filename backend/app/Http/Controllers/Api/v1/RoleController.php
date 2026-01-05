@@ -15,6 +15,7 @@ class RoleController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', Role::class);
         return Role::all();
     }
 
@@ -23,6 +24,7 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Role::class);
         $request->validate([
             'name' => 'required|string|unique:roles,name',
             'description' => 'nullable|string',
@@ -38,6 +40,7 @@ class RoleController extends Controller
      */
     public function show(Role $role)
     {
+        $this->authorize('view', $role);
         return $role;
     }
 
@@ -46,6 +49,7 @@ class RoleController extends Controller
      */
     public function update(Request $request, Role $role)
     {
+        $this->authorize('update', $role);
         $request->validate([
             'name' => 'sometimes|required|string|unique:roles,name,' . $role->id,
             'description' => 'nullable|string',
@@ -61,6 +65,7 @@ class RoleController extends Controller
      */
     public function destroy(Role $role)
     {
+        $this->authorize('delete', $role);
         $role->delete();
 
         return response()->json(null, Response::HTTP_NO_CONTENT);
@@ -68,6 +73,7 @@ class RoleController extends Controller
 
     public function assignPermission(Role $role, Permission $permission)
     {
+        $this->authorize('assign', Permission::class);
         $role->permissions()->attach($permission);
 
         return response()->json(['message' => 'Permission assigned successfully.']);
@@ -75,6 +81,7 @@ class RoleController extends Controller
 
     public function removePermission(Role $role, Permission $permission)
     {
+        $this->authorize('assign', Permission::class);
         $role->permissions()->detach($permission);
 
         return response()->json(['message' => 'Permission removed successfully.']);

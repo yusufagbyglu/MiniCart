@@ -18,7 +18,7 @@ class UserController extends Controller
     public function index()
     {
         $this->authorize('viewAny', User::class);
-    
+
         return response()->json(User::all());
     }
 
@@ -27,13 +27,14 @@ class UserController extends Controller
      */
     public function store(\App\Http\Requests\StoreUserRequest $request)
     {
-        $this->authorize('view_any', User::class);
+        $this->authorize('create', User::class);
         $user = User::create($request->validated());
         return response()->json($user, 201);
     }
 
     public function assignRole(User $user, Role $role)
     {
+        $this->authorize('assign', Role::class);
         $user->roles()->attach($role);
 
         return response()->json(['message' => 'Role assigned successfully.']);
@@ -41,6 +42,7 @@ class UserController extends Controller
 
     public function removeRole(User $user, Role $role)
     {
+        $this->authorize('assign', Role::class);
         $user->roles()->detach($role);
 
         return response()->json(['message' => 'Role removed successfully.']);

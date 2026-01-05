@@ -61,6 +61,8 @@ class CartController extends Controller
             'session_id' => 'nullable|string'
         ]);
 
+        $this->authorize('create', CartItem::class);
+
         $cart = $this->getCart($request);
 
         if (!$cart) {

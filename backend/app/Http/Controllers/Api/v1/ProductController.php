@@ -47,7 +47,7 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $this->authorize('products.view', Product::class);
+        $this->authorize('viewAny', Product::class);
 
         $query = Product::with(['category', 'images'])->where('is_active', true);
 
@@ -55,7 +55,7 @@ class ProductController extends Controller
         $query->when($request->query('search'), function ($query, $search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         });
 
@@ -82,7 +82,7 @@ class ProductController extends Controller
      */
     public function getAllProducts(Request $request)
     {
-        $this->authorize('products.view-all', Product::class);
+        $this->authorize('viewAll', Product::class);
 
         $query = Product::with(['category', 'images']);
 
@@ -90,7 +90,7 @@ class ProductController extends Controller
         $query->when($request->query('search'), function ($query, $search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         });
 
@@ -101,7 +101,7 @@ class ProductController extends Controller
         $query->when($request->has('featured'), function ($query) use ($request) {
             $query->where('featured', $request->boolean('featured'));
         });
-        
+
         $query->when($request->has('is_active'), function ($query) use ($request) {
             $query->where('is_active', $request->boolean('is_active'));
         });
@@ -125,7 +125,7 @@ class ProductController extends Controller
     // Create a new product
     public function store(Request $request)
     {
-        $this->authorize('products.create', Product::class);
+        $this->authorize('create', Product::class);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
@@ -176,10 +176,10 @@ class ProductController extends Controller
 
         } catch (\Throwable $e) {
             // Cleanup uploaded files if transaction fails
-            foreach($imagePaths as $path) {
+            foreach ($imagePaths as $path) {
                 Storage::disk('public')->delete($path);
             }
-            
+
             // Re-throw the exception to be handled by Laravel's exception handler
             throw $e;
         }
@@ -188,7 +188,7 @@ class ProductController extends Controller
     // Update existing product
     public function update(Request $request, Product $product)
     {
-        $this->authorize('products.update', $product);
+        $this->authorize('update', $product);
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string',
@@ -239,10 +239,10 @@ class ProductController extends Controller
 
         } catch (\Throwable $e) {
             // Cleanup uploaded files if transaction fails
-            foreach($imagePaths as $path) {
+            foreach ($imagePaths as $path) {
                 Storage::disk('public')->delete($path);
             }
-            
+
             // Re-throw the exception to be handled by Laravel's exception handler
             throw $e;
         }
@@ -251,7 +251,7 @@ class ProductController extends Controller
     // Delete a product
     public function destroy(Product $product)
     {
-        $this->authorize('products.delete', $product);
+        $this->authorize('delete', $product);
 
         // Get image paths before deleting the product
         $imagePaths = $product->images()->pluck('image_path')->all();
@@ -272,13 +272,13 @@ class ProductController extends Controller
     // Set primary image
     public function setPrimaryImage(Product $product, ProductImage $image)
     {
-        $this->authorize('products.manage-images', $product);
+        $this->authorize('manageImages', $product);
         // Verify the image belongs to the product
         if ($image->product_id !== $product->id) {
             return response()->json(['message' => 'Image does not belong to this product'], 422);
         }
 
-        DB::transaction(function() use ($product, $image) {
+        DB::transaction(function () use ($product, $image) {
             // Reset all primary flags
             $product->images()->update(['is_primary' => false]);
 
@@ -292,7 +292,7 @@ class ProductController extends Controller
     // Remove an image
     public function removeImage(Product $product, ProductImage $image)
     {
-        $this->authorize('products.manage-images', $product);
+        $this->authorize('manageImages', $product);
         // Verify the image belongs to the product
         if ($image->product_id !== $product->id) {
             return response()->json(['message' => 'Image does not belong to this product'], 422);
@@ -305,9 +305,9 @@ class ProductController extends Controller
 
         $imagePath = $image->image_path;
 
-        DB::transaction(function() use ($product, $image) {
+        DB::transaction(function () use ($product, $image) {
             $wasPrimary = $image->is_primary;
-            
+
             // Delete from database
             $image->delete();
 
@@ -329,7 +329,7 @@ class ProductController extends Controller
     public function addImage(Request $request, Product $product)
     {
         // Check if the user is authorized to manage images for this product
-        $this->authorize('products.manage-images', $product);
+        $this->authorize('manageImages', $product);
 
         // Validate request data
         $request->validate([

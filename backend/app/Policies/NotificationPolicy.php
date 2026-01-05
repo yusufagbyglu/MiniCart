@@ -14,7 +14,8 @@ class NotificationPolicy
 
     public function view(User $user, Notification $notification)
     {
-        return $user->id === $notification->user_id || $user->hasPermissionTo('notifications.view-all');
+        return ($user->id === $notification->user_id && $user->hasPermissionTo('notifications.view-own')) ||
+            $user->hasPermissionTo('notifications.view-all');
     }
 
     public function send(User $user)

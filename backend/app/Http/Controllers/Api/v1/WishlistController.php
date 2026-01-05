@@ -28,6 +28,7 @@ class WishlistController extends Controller
      */
     public function store($productId)
     {
+        $this->authorize('create', Wishlist::class);
         $product = Product::findOrFail($productId);
         $user = Auth::user();
 

@@ -29,6 +29,7 @@ class ReviewController extends Controller
      */
     public function store(Request $request, $productId)
     {
+        $this->authorize('create', Review::class);
         $request->validate([
             'rating' => 'required|integer|min:1|max:5',
             'title' => 'nullable|string|max:255',
@@ -60,10 +61,7 @@ class ReviewController extends Controller
      */
     public function update(Request $request, Review $review)
     {
-        // Policy check should happen here or via middleware. 
-        if ($review->user_id !== Auth::id()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+        $this->authorize('update', $review);
 
         $request->validate([
             'rating' => 'integer|min:1|max:5',
@@ -89,12 +87,7 @@ class ReviewController extends Controller
      */
     public function destroy(Review $review)
     {
-        // Allow owner or admin (admin check typically in a separate admin method or robust policy)
-        // For now, assuming owner check.
-        if ($review->user_id !== Auth::id()) { // AND not admin
-            // Simplification: Owners delete their own. Admins delete via Admin routes.
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+        $this->authorize('delete', $review);
 
         $review->delete();
 

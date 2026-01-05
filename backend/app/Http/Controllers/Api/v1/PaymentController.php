@@ -21,6 +21,8 @@ class PaymentController extends Controller
 
         $order = Order::findOrFail($request->order_id);
 
+        $this->authorize('update', $order);
+
         // Security check: ensure order belongs to user
         if ($order->user_id !== Auth::id()) {
             return response()->json(['message' => 'Unauthorized'], 403);
@@ -68,6 +70,8 @@ class PaymentController extends Controller
     public function status($orderId)
     {
         $order = Order::findOrFail($orderId);
+
+        $this->authorize('view', $order);
 
         if ($order->user_id !== Auth::id()) {
             return response()->json(['message' => 'Unauthorized'], 403);

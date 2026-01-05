@@ -22,6 +22,7 @@ class OrderController extends Controller
      */
     public function checkout(Request $request)
     {
+        $this->authorize('create', Order::class);
         $user = $request->user();
 
         $validated = $request->validate([
@@ -146,6 +147,7 @@ class OrderController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Order::class);
         $orders = Order::where('user_id', $request->user()->id)
             ->with(['items', 'items.product'])
             ->orderByDesc('created_at')
@@ -161,6 +163,8 @@ class OrderController extends Controller
             ->with(['items.product', 'taxes', 'coupons', 'shippingAddress', 'billingAddress'])
             ->firstOrFail();
 
+        $this->authorize('view', $order);
+
         return response()->json(['success' => true, 'data' => $order]);
     }
 
@@ -169,6 +173,8 @@ class OrderController extends Controller
         $order = Order::where('user_id', $request->user()->id)
             ->where('order_number', $orderNumber)
             ->firstOrFail();
+
+        $this->authorize('cancel', $order);
 
         if (!in_array($order->status, ['pending', 'confirmed'])) {
             return response()->json(['success' => false, 'message' => 'Order cannot be cancelled in current status'], 400);

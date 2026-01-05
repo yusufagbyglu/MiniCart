@@ -20,8 +20,8 @@ class ProductPolicy
             return true;
         }
 
-        return $user->hasPermission('products.view') || 
-               $user->hasPermission('products.view-all');
+        return $user->hasPermissionTo('products.view') ||
+            $user->hasPermissionTo('products.view-all');
     }
 
     /**
@@ -35,7 +35,7 @@ class ProductPolicy
         }
 
         // Only authenticated users with view-all permission can see inactive/deleted
-        return $user && $user->hasPermission('products.view-all');
+        return $user && $user->hasPermissionTo('products.view-all');
     }
 
     /**
@@ -44,7 +44,7 @@ class ProductPolicy
     public function create(User $user): bool
     {
         // Only admin and shop-manager can create
-        return $user->hasPermission('products.create');
+        return $user->hasPermissionTo('products.create');
     }
 
     /**
@@ -52,7 +52,7 @@ class ProductPolicy
      */
     public function update(User $user, Product $product): bool
     {
-        return $user->hasPermission('products.update');
+        return $user->hasPermissionTo('products.update');
     }
 
     /**
@@ -60,7 +60,7 @@ class ProductPolicy
      */
     public function delete(User $user, Product $product): bool
     {
-        return $user->hasPermission('products.delete');
+        return $user->hasPermissionTo('products.delete');
     }
 
     /**
@@ -68,7 +68,7 @@ class ProductPolicy
      */
     public function restore(User $user, Product $product): bool
     {
-        return $user->hasPermission('products.restore');
+        return $user->hasPermissionTo('products.restore');
     }
 
     /**
@@ -76,7 +76,7 @@ class ProductPolicy
      */
     public function forceDelete(User $user, Product $product): bool
     {
-        return $user->hasPermission('products.force-delete');
+        return $user->hasPermissionTo('products.force-delete');
     }
 
     /**
@@ -84,7 +84,7 @@ class ProductPolicy
      */
     public function manageStock(User $user, Product $product): bool
     {
-        return $user->hasPermission('products.manage-stock');
+        return $user->hasPermissionTo('products.manage-stock');
     }
 
     /**
@@ -92,7 +92,7 @@ class ProductPolicy
      */
     public function manageImages(User $user, Product $product): bool
     {
-        return $user->hasPermission('products.manage-images');
+        return $user->hasPermissionTo('products.manage-images');
     }
 
     /**
@@ -100,6 +100,6 @@ class ProductPolicy
      */
     public function setFeatured(User $user, Product $product): bool
     {
-        return $user->hasPermission('products.set-featured');
+        return $user->hasPermissionTo('products.set-featured');
     }
 }

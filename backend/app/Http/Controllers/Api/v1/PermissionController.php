@@ -14,6 +14,7 @@ class PermissionController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', Permission::class);
         return Permission::all();
     }
 
