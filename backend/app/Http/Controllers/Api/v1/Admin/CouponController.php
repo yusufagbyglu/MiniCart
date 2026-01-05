@@ -10,11 +10,13 @@ class CouponController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', Coupon::class);
         return response()->json(Coupon::latest()->paginate(20));
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', Coupon::class);
         $validated = $request->validate([
             'code' => 'required|unique:coupons,code',
             'discount_type' => 'required|in:percentage,fixed',
@@ -32,12 +34,15 @@ class CouponController extends Controller
 
     public function show($id)
     {
-        return response()->json(Coupon::findOrFail($id));
+        $coupon = Coupon::findOrFail($id);
+        $this->authorize('view', $coupon);
+        return response()->json($coupon);
     }
 
     public function update(Request $request, $id)
     {
         $coupon = Coupon::findOrFail($id);
+        $this->authorize('update', $coupon);
 
         $validated = $request->validate([
             'code' => 'sometimes|unique:coupons,code,' . $id,
@@ -56,7 +61,9 @@ class CouponController extends Controller
 
     public function destroy($id)
     {
-        Coupon::destroy($id);
+        $coupon = Coupon::findOrFail($id);
+        $this->authorize('delete', $coupon);
+        $coupon->delete();
         return response()->json(['message' => 'Coupon deleted']);
     }
 }

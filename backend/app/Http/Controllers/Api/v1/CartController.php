@@ -162,7 +162,7 @@ class CartController extends Controller
         }
 
         if ($cart->user_id) {
-            $this->authorize('update', $cart);
+            $this->authorize('applyCoupon', $cart);
         }
 
         $coupon = Coupon::where('code', $validated['code'])->first();
@@ -209,7 +209,7 @@ class CartController extends Controller
         $cart = $this->getCart($request);
         if ($cart) {
             if ($cart->user_id) {
-                $this->authorize('update', $cart);
+                $this->authorize('applyCoupon', $cart);
             }
             $cart->update(['coupon_id' => null]);
         }

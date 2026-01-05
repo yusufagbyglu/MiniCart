@@ -83,4 +83,9 @@ class CartPolicy
     {
         return $user->hasRole('admin');
     }
+
+    public function applyCoupon(User $user, Cart $cart): bool
+    {
+        return $user->hasPermissionTo('cart.apply-coupon');
+    }
 }

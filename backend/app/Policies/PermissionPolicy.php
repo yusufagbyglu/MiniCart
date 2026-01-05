@@ -21,4 +21,19 @@ class PermissionPolicy
     {
         return $user->hasPermissionTo('permissions.assign');
     }
+
+    public function create(User $user)
+    {
+        return $user->hasRole('admin');
+    }
+
+    public function update(User $user, Permission $permission)
+    {
+        return $user->hasRole('admin');
+    }
+
+    public function delete(User $user, Permission $permission)
+    {
+        return $user->hasRole('admin');
+    }
 }

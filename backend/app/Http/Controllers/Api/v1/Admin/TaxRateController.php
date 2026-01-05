@@ -10,11 +10,13 @@ class TaxRateController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', TaxRate::class);
         return response()->json(TaxRate::all());
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', TaxRate::class);
         $validated = $request->validate([
             'name' => 'required|string',
             'country' => 'required|string|size:2', // alpha-2 code usually
@@ -31,6 +33,7 @@ class TaxRateController extends Controller
     public function update(Request $request, $id)
     {
         $taxRate = TaxRate::findOrFail($id);
+        $this->authorize('update', $taxRate);
 
         $validated = $request->validate([
             'name' => 'sometimes|string',
@@ -47,7 +50,9 @@ class TaxRateController extends Controller
 
     public function destroy($id)
     {
-        TaxRate::destroy($id);
+        $taxRate = TaxRate::findOrFail($id);
+        $this->authorize('delete', $taxRate);
+        $taxRate->delete();
         return response()->json(['message' => 'Tax Rate deleted']);
     }
 }

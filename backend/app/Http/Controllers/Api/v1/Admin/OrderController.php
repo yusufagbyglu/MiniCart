@@ -10,6 +10,7 @@ class OrderController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', Order::class);
         $orders = Order::with('user')->latest()->paginate(20);
         return response()->json($orders);
     }
@@ -17,6 +18,7 @@ class OrderController extends Controller
     public function show($id)
     {
         $order = Order::with(['items.product', 'user', 'shippingAddress'])->findOrFail($id);
+        $this->authorize('view', $order);
         return response()->json($order);
     }
 
@@ -27,6 +29,7 @@ class OrderController extends Controller
         ]);
 
         $order = Order::findOrFail($id);
+        $this->authorize('updateStatus', $order);
         $order->update(['status' => $request->status]);
 
         return response()->json(['message' => 'Order status updated', 'order' => $order]);
@@ -34,6 +37,7 @@ class OrderController extends Controller
 
     public function stats()
     {
+        $this->authorize('viewStats', Order::class);
         $totalOrders = Order::count();
         $totalRevenue = Order::where('status', '!=', 'cancelled')->sum('total_amount');
 

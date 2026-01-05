@@ -63,4 +63,9 @@ class OrderPolicy
     {
         return $user->hasPermissionTo('orders.change-status');
     }
+
+    public function viewStats(User $user): bool
+    {
+        return $user->hasPermissionTo('reports.sales');
+    }
 }

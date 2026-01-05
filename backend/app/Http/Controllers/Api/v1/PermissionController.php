@@ -23,6 +23,7 @@ class PermissionController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Permission::class);
         $request->validate([
             'name' => 'required|string|unique:permissions,name',
             'description' => 'nullable|string',
@@ -38,6 +39,7 @@ class PermissionController extends Controller
      */
     public function show(Permission $permission)
     {
+        $this->authorize('view', $permission);
         return $permission;
     }
 
@@ -46,6 +48,7 @@ class PermissionController extends Controller
      */
     public function update(Request $request, Permission $permission)
     {
+        $this->authorize('update', $permission);
         $request->validate([
             'name' => 'sometimes|required|string|unique:permissions,name,' . $permission->id,
             'description' => 'nullable|string',
@@ -61,6 +64,7 @@ class PermissionController extends Controller
      */
     public function destroy(Permission $permission)
     {
+        $this->authorize('delete', $permission);
         $permission->delete();
 
         return response()->json(null, Response::HTTP_NO_CONTENT);
