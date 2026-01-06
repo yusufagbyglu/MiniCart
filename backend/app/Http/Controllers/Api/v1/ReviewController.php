@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Data\ReviewData;
 
 class ReviewController extends Controller
 {
@@ -27,27 +28,18 @@ class ReviewController extends Controller
     /**
      * Store a newly created review in storage.
      */
-    public function store(Request $request, $productId)
+    public function store(ReviewData $data, $productId)
     {
         $this->authorize('create', Review::class);
-        $request->validate([
-            'rating' => 'required|integer|min:1|max:5',
-            'title' => 'nullable|string|max:255',
-            'comment' => 'nullable|string',
-        ]);
-
         $product = Product::findOrFail($productId);
-
-        // Check if user already reviewed this product? (Optional, but good practice)
-        // For now allowing multiple reviews or relying on frontend checks.
 
         $review = Review::create([
             'product_id' => $product->id,
             'user_id' => Auth::id(),
-            'rating' => $request->rating,
-            'title' => $request->title,
-            'comment' => $request->comment,
-            'is_approved' => false, // Default to pending
+            'rating' => $data->rating,
+            'title' => $data->title,
+            'comment' => $data->comment,
+            'is_approved' => false,
         ]);
 
         return response()->json([
@@ -59,21 +51,15 @@ class ReviewController extends Controller
     /**
      * Update the specified review.
      */
-    public function update(Request $request, Review $review)
+    public function update(ReviewData $data, Review $review)
     {
         $this->authorize('update', $review);
 
-        $request->validate([
-            'rating' => 'integer|min:1|max:5',
-            'title' => 'nullable|string|max:255',
-            'comment' => 'nullable|string',
-        ]);
-
         $review->update([
-            'rating' => $request->input('rating', $review->rating),
-            'title' => $request->input('title', $review->title),
-            'comment' => $request->input('comment', $review->comment),
-            'is_approved' => false, // Reset approval on edit? Usually yes.
+            'rating' => $data->rating,
+            'title' => $data->title,
+            'comment' => $data->comment,
+            'is_approved' => false,
         ]);
 
         return response()->json([

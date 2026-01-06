@@ -13,6 +13,7 @@ use App\Http\Resources\ProductDetailResource;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Data\ProductData;
 
 class ProductController extends Controller
 {
@@ -123,44 +124,24 @@ class ProductController extends Controller
     }
 
     // Create a new product
-    public function store(Request $request)
+    public function store(ProductData $data)
     {
         $this->authorize('create', Product::class);
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'required|string',
-            'price' => 'required|numeric|min:0',
-            'base_currency' => 'required|string|size:3',
-            'stock' => 'required|integer|min:0',
-            'sku' => 'required|string|max:255|unique:products,sku',
-            'category_id' => 'required|exists:categories,id',
-            'tax_class_id' => 'nullable|exists:tax_classes,id',
-            'weight' => 'nullable|numeric|min:0',
-            'length' => 'nullable|numeric|min:0',
-            'width' => 'nullable|numeric|min:0',
-            'height' => 'nullable|numeric|min:0',
-            'featured' => 'boolean',
-            'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
 
         $imagePaths = [];
 
         try {
-            $product = DB::transaction(function () use ($validated, $request, &$imagePaths) {
+            $product = DB::transaction(function () use ($data, &$imagePaths) {
                 // Generate slug from name
-                $validated['slug'] = Str::slug($validated['name']);
-
-                // Handle featured flag
-                $validated['featured'] = $request->boolean('featured', false);
-                $validated['is_active'] = $request->boolean('is_active', true);
+                $attributes = $data->toArray();
+                $attributes['slug'] = Str::slug($data->name);
 
                 // Create product
-                $product = Product::create($validated);
+                $product = Product::create($attributes);
 
                 // Handle image uploads
-                if ($request->hasFile('images')) {
-                    foreach ($request->file('images') as $key => $image) {
+                if ($data->images) {
+                    foreach ($data->images as $key => $image) {
                         $path = $image->store('products', 'public');
                         $imagePaths[] = $path; // Store path for potential cleanup
                         $product->images()->create([
@@ -186,41 +167,23 @@ class ProductController extends Controller
     }
 
     // Update existing product
-    public function update(Request $request, Product $product)
+    public function update(ProductData $data, Product $product)
     {
         $this->authorize('update', $product);
-        $validated = $request->validate([
-            'name' => 'sometimes|required|string|max:255',
-            'description' => 'sometimes|required|string',
-            'price' => 'sometimes|required|numeric|min:0',
-            'stock' => 'sometimes|required|integer|min:0',
-            'sku' => 'sometimes|required|string|max:255|unique:products,sku,' . $product->id,
-            'category_id' => 'sometimes|required|exists:categories,id',
-            'tax_class_id' => 'nullable|exists:tax_classes,id',
-            'weight' => 'nullable|numeric|min:0',
-            'length' => 'nullable|numeric|min:0',
-            'width' => 'nullable|numeric|min:0',
-            'height' => 'nullable|numeric|min:0',
-            'featured' => 'boolean',
-            'is_active' => 'boolean',
-            'images' => 'sometimes|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
 
         $imagePaths = [];
 
         try {
-            DB::transaction(function () use ($validated, $request, $product, &$imagePaths) {
+            DB::transaction(function () use ($data, $product, &$imagePaths) {
                 // Update slug if name changed
-                if ($request->has('name')) {
-                    $validated['slug'] = Str::slug($validated['name']);
-                }
+                $attributes = $data->toArray();
+                $attributes['slug'] = Str::slug($data->name);
 
-                $product->update($validated);
+                $product->update($attributes);
 
                 // Handle new image uploads
-                if ($request->hasFile('images')) {
-                    foreach ($request->file('images') as $image) {
+                if ($data->images) {
+                    foreach ($data->images as $image) {
                         $path = $image->store('products', 'public');
                         $imagePaths[] = $path; // Store path for potential cleanup
                         $product->images()->create([

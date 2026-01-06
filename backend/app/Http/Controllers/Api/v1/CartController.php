@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Http\Resources\CartResource;
+use App\Data\AddToCartData;
 
 class CartController extends Controller
 {
@@ -53,21 +54,15 @@ class CartController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(AddToCartData $data, Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1',
-            'session_id' => 'nullable|string'
-        ]);
-
         $this->authorize('create', CartItem::class);
 
         $cart = $this->getCart($request);
 
         if (!$cart) {
-            if ($request->input('session_id')) {
-                $cart = Cart::create(['session_id' => $request->input('session_id')]);
+            if ($data->session_id) {
+                $cart = Cart::create(['session_id' => $data->session_id]);
             } else {
                 return response()->json(['success' => false, 'message' => 'Session ID required for guest users'], 400);
             }
@@ -77,16 +72,16 @@ class CartController extends Controller
             $this->authorize('update', $cart); // Treating adding item as updating cart
         }
 
-        $product = Product::findOrFail($validated['product_id']);
+        $product = Product::findOrFail($data->product_id);
 
         $cartItem = $cart->items()->where('product_id', $product->id)->first();
 
         if ($cartItem) {
-            $cartItem->increment('quantity', $validated['quantity']);
+            $cartItem->increment('quantity', $data->quantity);
         } else {
             $cart->items()->create([
                 'product_id' => $product->id,
-                'quantity' => $validated['quantity'],
+                'quantity' => $data->quantity,
                 'price' => $product->price
             ]);
         }

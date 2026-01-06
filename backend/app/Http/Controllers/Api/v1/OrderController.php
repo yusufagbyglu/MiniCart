@@ -14,23 +14,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Data\CheckoutData;
 
 class OrderController extends Controller
 {
     /**
      * Checkout logic: Convert Cart to Order.
      */
-    public function checkout(Request $request)
+    public function checkout(CheckoutData $checkoutData, Request $request)
     {
         $this->authorize('create', Order::class);
         $user = $request->user();
 
-        $validated = $request->validate([
-            'shipping_address_id' => 'required|exists:user_addresses,id',
-            'billing_address_id' => 'required|exists:user_addresses,id',
-            'payment_method' => 'required|in:fake,stripe,credit_card,bank_transfer',
-            'notes' => 'nullable|string'
-        ]);
+        // data is already validated by CheckoutData injection
 
         // Get Cart
         $cart = Cart::with(['items.product', 'coupon'])->where('user_id', $user->id)->first();
@@ -40,7 +36,7 @@ class OrderController extends Controller
         }
 
         // Verify Addresses belong to user
-        $shippingAddress = UserAddress::where('id', $validated['shipping_address_id'])
+        $shippingAddress = UserAddress::where('id', $checkoutData->shipping_address_id)
             ->where('user_id', $user->id)
             ->firstOrFail();
 
@@ -85,20 +81,20 @@ class OrderController extends Controller
         $totalAmount = $taxableAmount + $taxAmount;
 
         // DB Transaction
-        return DB::transaction(function () use ($user, $cart, $validated, $subtotal, $discountAmount, $taxAmount, $totalAmount, $taxRateRecord, $appliedRate) {
+        return DB::transaction(function () use ($user, $cart, $checkoutData, $subtotal, $discountAmount, $taxAmount, $totalAmount, $taxRateRecord, $appliedRate) {
 
             // Create Order
             $order = Order::create([
                 'user_id' => $user->id,
-                'shipping_address_id' => $validated['shipping_address_id'],
-                'billing_address_id' => $validated['billing_address_id'],
+                'shipping_address_id' => $checkoutData->shipping_address_id,
+                'billing_address_id' => $checkoutData->billing_address_id,
                 'status' => 'pending',
                 'total_amount' => $totalAmount,
                 'tax_amount' => $taxAmount,
                 'discount_amount' => $discountAmount,
                 'order_number' => 'ORD-' . strtoupper(Str::random(10)), // or sequential logic
                 'currency' => 'USD',
-                'notes' => $validated['notes'] ?? null
+                'notes' => $checkoutData->notes ?? null
             ]);
 
             // Create Order Items

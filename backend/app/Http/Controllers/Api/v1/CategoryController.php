@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreCategoryRequest;
-use App\Http\Requests\UpdateCategoryRequest;
-use App\Http\Resources\CategoryResource;
 use App\Models\Category;
+use App\Http\Resources\CategoryResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use App\Data\CategoryData;
 
 /**
  * @group Category Management
@@ -39,7 +38,7 @@ class CategoryController extends Controller
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Category::class);
-        
+
         $categories = Category::with(['parent', 'children'])
             ->paginate((int) $request->input('per_page', 15));
 
@@ -60,11 +59,11 @@ class CategoryController extends Controller
      *   "data": {"id": 1, "name": "Electronics", ...}
      * }
      */
-    public function store(StoreCategoryRequest $request): JsonResponse
+    public function store(CategoryData $data): JsonResponse
     {
         $this->authorize('create', Category::class);
-        
-        $category = Category::create($request->validated());
+
+        $category = Category::create($data->toArray());
 
         return response()->json([
             'success' => true,
@@ -86,7 +85,7 @@ class CategoryController extends Controller
     public function show(Category $category): JsonResponse
     {
         $this->authorize('view', $category);
-        
+
         $category->load(['parent', 'children', 'products']);
 
         return response()->json([
@@ -108,14 +107,14 @@ class CategoryController extends Controller
      *   "data": {"id": 1, "name": "New Category Name", ...}
      * }
      */
-    public function update(UpdateCategoryRequest $request, Category $category): JsonResponse
+    public function update(CategoryData $data, Category $category): JsonResponse
     {
         $this->authorize('update', $category);
 
         // A category cannot be its own child - circular reference check.
-        if ($request->has('parent_id')) {
-            $parentId = $request->parent_id;
-            
+        $parentId = $data->parent_id;
+        if ($parentId) {
+
             // Prevent the category from becoming its own parent.
             if ($parentId == $category->id) {
                 return response()->json([
@@ -134,7 +133,7 @@ class CategoryController extends Controller
             }
         }
 
-        $category->update($request->validated());
+        $category->update($data->toArray());
 
         return response()->json([
             'success' => true,
@@ -205,7 +204,7 @@ class CategoryController extends Controller
             'data' => CategoryResource::collection($children)
         ]);
     }
-    
+
     /**
      * Get all descendants of a category (recursive).
      *
@@ -271,7 +270,7 @@ class CategoryController extends Controller
     {
         $this->authorize('viewAny', Category::class);
         $categories = Category::whereNull('parent_id')->get();
-        
+
         return response()->json([
             'success' => true,
             'data' => CategoryResource::collection($categories)

@@ -8,18 +8,13 @@ use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Data\PaymentData;
 
 class PaymentController extends Controller
 {
-    public function process(Request $request)
+    public function process(PaymentData $data)
     {
-        $request->validate([
-            'order_id' => 'required|exists:orders,id',
-            'method' => 'required|in:fake,stripe,credit_card,bank_transfer',
-            'payment_token' => 'nullable|string', // For Stripe/real gateways
-        ]);
-
-        $order = Order::findOrFail($request->order_id);
+        $order = Order::findOrFail($data->order_id);
 
         $this->authorize('update', $order);
 
@@ -33,7 +28,7 @@ class PaymentController extends Controller
         }
 
         // Mock Payment Processing
-        $method = $request->input('method');
+        $method = $data->method;
         $status = 'completed';
         $transactionId = 'tx_' . uniqid();
 
@@ -41,7 +36,7 @@ class PaymentController extends Controller
         // if ($method === 'stripe') { $status = StripeService::charge(...); }
 
         try {
-            DB::transaction(function () use ($order, $request, $transactionId, $method) {
+            DB::transaction(function () use ($order, $data, $transactionId, $method) {
                 Payment::create([
                     'order_id' => $order->id,
                     'amount' => $order->total_amount,
@@ -49,7 +44,7 @@ class PaymentController extends Controller
                     'status' => 'completed',
                     'transaction_id' => $transactionId,
                     'currency' => $order->currency,
-                    'payment_details' => json_encode($request->all()),
+                    'payment_details' => json_encode($data->toArray()),
                 ]);
 
                 // Update Order Status

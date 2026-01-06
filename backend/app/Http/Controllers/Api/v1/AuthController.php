@@ -7,20 +7,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Models\User;
+use App\Data\RegisterData;
+use App\Data\LoginData;
+
 class AuthController extends Controller
 {
-    public function register(Request $request)
+    public function register(RegisterData $data)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
-
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
+            'name' => $data->name,
+            'email' => $data->email,
+            'password' => bcrypt($data->password),
         ]);
 
         $token = $user->createToken('api-token')->plainTextToken;
@@ -32,17 +29,11 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function login(Request $request)
+    public function login(LoginData $data)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-            // optionally: 'device_name' => 'required'
-        ]);
+        $user = User::where('email', $data->email)->first();
 
-        $user = User::where('email', $request->email)->first();
-
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (!$user || !Hash::check($data->password, $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
@@ -56,7 +47,7 @@ class AuthController extends Controller
             'token_type' => 'Bearer',
         ]);
     }
-public function logout(Request $request)
+    public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
 

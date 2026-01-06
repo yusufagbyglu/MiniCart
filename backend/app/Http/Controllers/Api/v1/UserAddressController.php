@@ -6,9 +6,8 @@ use App\Models\UserAddress;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserAddressResource;
-use Illuminate\Http\Response; // Corrected: Using Illuminate\Http\Response
-use App\Http\Requests\StoreUserAddressRequest;
-use App\Http\Requests\UpdateUserAddressRequest;
+use Illuminate\Http\Response;
+use App\Data\AddressData;
 
 class UserAddressController extends Controller
 {
@@ -29,9 +28,9 @@ class UserAddressController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreUserAddressRequest $request)
+    public function store(Request $request, AddressData $data)
     {
-        $address = $request->user()->addresses()->create($request->validated());
+        $address = $request->user()->addresses()->create($data->toArray());
 
         return new UserAddressResource($address);
     }
@@ -48,10 +47,10 @@ class UserAddressController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateUserAddressRequest $request, UserAddress $userAddress)
+    public function update(AddressData $data, UserAddress $userAddress)
     {
         // Corrected: Removed manual authorization check, handled by policy
-        $userAddress->update($request->validated());
+        $userAddress->update($data->toArray());
 
         return new UserAddressResource($userAddress);
     }
