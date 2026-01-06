@@ -56,14 +56,6 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * Get the roles for the user.
-     */
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(Role::class, 'user_roles')
-            ->withTimestamps();
-    }
 
     /**
      * Get all permissions for the user through their roles.
@@ -134,13 +126,13 @@ class User extends Authenticatable
     public function hasAllRoles(array $roles): bool
     {
         $userRoles = $this->roles()->pluck('name')->toArray();
-        
+
         foreach ($roles as $role) {
             if (!in_array($role, $userRoles)) {
                 return false;
             }
         }
-        
+
         return true;
     }
 
@@ -174,7 +166,7 @@ class User extends Authenticatable
     public function syncRoles(array $roles): void
     {
         $roleIds = [];
-        
+
         foreach ($roles as $role) {
             if (is_string($role)) {
                 $roleModel = Role::where('name', $role)->first();
@@ -189,12 +181,6 @@ class User extends Authenticatable
         $this->roles()->sync($roleIds);
     }
 
-    public function hasPermissionTo($permissionName){
-
-        return $this->roles()->whereHas('permissions', function($q) use ($permissionName) {
-            $q->where('name', $permissionName);
-        })->exists();
-    }
 
     public function addresses(): HasMany
     {

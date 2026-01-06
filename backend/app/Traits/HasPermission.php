@@ -8,38 +8,31 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 trait HasPermission
 {
     /**
-    * The roles that belong to the user.
-    */
+     * The roles that belong to the user.
+     */
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'user_roles')->withTimestamps();
     }
 
     /**
-   * Check if the user has a specific permission through their roles.
-   *
-   * @param string $permissionName The name of the permission.
-   * @return bool
-   */
+     * Check if the user has a specific permission through their roles.
+     * Admin role has implicit permission to everything.
+     */
     public function hasPermissionTo(string $permissionName): bool
     {
-        foreach ($this->roles as $role) {
-            if ($role->permissions()->where('name', $permissionName)->exists()) {
-                return true;
-            }
+        // Admin bypass
+        if ($this->hasRole('admin')) {
+            return true;
         }
-        return false;
+
+        return $this->roles()->whereHas('permissions', function ($q) use ($permissionName) {
+            $q->where('name', $permissionName);
+        })->exists();
     }
 
     public function hasRole(string ...$roleNames): bool
     {
-        foreach ($roleNames as $roleName) {
-            if ($this->roles()->contains('name', $roleName)) {
-                return true;
-            }
-            
-        }
-
-        return false;
+        return $this->roles()->whereIn('name', $roleNames)->exists();
     }
 }

@@ -32,8 +32,7 @@ class CartPolicy
      */
     public function create(User $user): bool
     {
-        // Support/Admin or Customer
-        return $user->hasPermissionTo('cart.manage-own') || $user->hasPermissionTo('cart.view-all');
+        return $user->hasPermissionTo('cart.create') || $user->hasPermissionTo('cart.manage-own');
     }
 
     /**
@@ -41,16 +40,7 @@ class CartPolicy
      */
     public function update(User $user, Cart $cart): bool
     {
-        // Assuming 'view-all' implies support capabilities, or we could add a specific 'cart.manage-any' permission if desired.
-        // For now, let's stick to strict ownership for updates unless we add a specific 'cart.manage-all' permission.
-        // Checking PermissionSeeder, we assume admins/support might need to inspect but not necessarily modify customer carts actively via API unless acting AS them.
-        // However, usually support might need to clear a stuck cart.
-
-        // Let's check PermissionSeeder again via reasoning:
-        // 'cart.view-all' exists. 'cart.manage-own' exists.
-        // Admin usually has all permissions.
-
-        if ($user->hasRole('admin')) {
+        if ($user->hasPermissionTo('cart.view-all')) {
             return true;
         }
 
@@ -62,9 +52,10 @@ class CartPolicy
      */
     public function delete(User $user, Cart $cart): bool
     {
-        if ($user->hasRole('admin')) {
+        if ($user->hasPermissionTo('cart.clear') || $user->hasPermissionTo('cart.view-all')) {
             return true;
         }
+
         return $user->id === $cart->user_id && $user->hasPermissionTo('cart.manage-own');
     }
 
@@ -73,7 +64,7 @@ class CartPolicy
      */
     public function restore(User $user, Cart $cart): bool
     {
-        return $user->hasPermissionTo('cart.manage-own') || $user->hasRole('admin');
+        return $user->hasPermissionTo('cart.manage-own') || $user->hasPermissionTo('cart.view-all');
     }
 
     /**
@@ -81,11 +72,11 @@ class CartPolicy
      */
     public function forceDelete(User $user, Cart $cart): bool
     {
-        return $user->hasRole('admin');
+        return $user->hasPermissionTo('cart.view-all');
     }
 
     public function applyCoupon(User $user, Cart $cart): bool
     {
-        return $user->hasPermissionTo('cart.apply-coupon');
+        return $user->hasPermissionTo('cart.apply-coupon') || ($user->id === $cart->user_id && $user->hasPermissionTo('cart.manage-own'));
     }
 }

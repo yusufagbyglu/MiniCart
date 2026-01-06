@@ -15,13 +15,8 @@ class ProductPolicy
      */
     public function viewAny(?User $user): bool
     {
-        // Anyone can view active products (even guests)
-        if (!$user) {
-            return true;
-        }
-
-        return $user->hasPermissionTo('products.view') ||
-            $user->hasPermissionTo('products.view-all');
+        // Public access
+        return true;
     }
 
     /**
