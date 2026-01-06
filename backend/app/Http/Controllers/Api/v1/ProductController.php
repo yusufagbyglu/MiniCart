@@ -340,4 +340,36 @@ class ProductController extends Controller
             throw $e;
         }
     }
+
+    public function search(Request $request)
+    {
+        return $this->index($request);
+    }
+
+    public function categories()
+    {
+        return \App\Models\Category::all();
+    }
+
+    public function categoryProducts(\App\Models\Category $category)
+    {
+        return ProductListResource::collection($category->products()->paginate(15));
+    }
+
+    public function stats()
+    {
+        $this->authorize('viewAll', Product::class);
+        return response()->json([
+            'total_products' => Product::count(),
+            'active_products' => Product::where('is_active', true)->count(),
+            'out_of_stock' => Product::where('stock', 0)->count(),
+        ]);
+    }
+
+    public function import(Request $request)
+    {
+        $this->authorize('create', Product::class);
+        // Placeholder for import logic
+        return response()->json(['message' => 'Product import functionality to be implemented.']);
+    }
 }

@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use App\Models\Role;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use App\Data\RoleData;
 
 class RoleController extends Controller
 {
@@ -16,21 +16,13 @@ class RoleController extends Controller
     public function index()
     {
         $this->authorize('viewAny', Role::class);
-        return Role::all();
+        return response()->json(Role::with('permissions')->paginate(20));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(RoleData $data)
     {
         $this->authorize('create', Role::class);
-        $request->validate([
-            'name' => 'required|string|unique:roles,name',
-            'description' => 'nullable|string',
-        ]);
-
-        $role = Role::create($request->all());
+        $role = Role::create($data->toArray());
 
         return response()->json($role, Response::HTTP_CREATED);
     }
@@ -41,21 +33,16 @@ class RoleController extends Controller
     public function show(Role $role)
     {
         $this->authorize('view', $role);
-        return $role;
+        return response()->json($role->load('permissions'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Role $role)
+    public function update(RoleData $data, Role $role)
     {
         $this->authorize('update', $role);
-        $request->validate([
-            'name' => 'sometimes|required|string|unique:roles,name,' . $role->id,
-            'description' => 'nullable|string',
-        ]);
-
-        $role->update($request->all());
+        $role->update($data->toArray());
 
         return response()->json($role);
     }

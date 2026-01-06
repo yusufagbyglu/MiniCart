@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\v1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\TaxRate;
+use App\Data\TaxRateData;
 use Illuminate\Http\Request;
 
 class TaxRateController extends Controller
@@ -11,48 +12,33 @@ class TaxRateController extends Controller
     public function index()
     {
         $this->authorize('viewAny', TaxRate::class);
-        return response()->json(TaxRate::all());
+        return response()->json(TaxRate::paginate(15));
     }
 
-    public function store(Request $request)
+    public function store(TaxRateData $data)
     {
         $this->authorize('create', TaxRate::class);
-        $validated = $request->validate([
-            'name' => 'required|string',
-            'country' => 'required|string|size:2', // alpha-2 code usually
-            'state' => 'nullable|string',
-            'rate' => 'required|numeric|min:0|max:100',
-            'tax_type' => 'required|in:vat,sales,gst,hst,pst,service,custom',
-            'is_active' => 'boolean'
-        ]);
-
-        $taxRate = TaxRate::create($validated);
+        $taxRate = TaxRate::create($data->toArray());
         return response()->json($taxRate, 201);
     }
 
-    public function update(Request $request, $id)
+    public function show(TaxRate $taxRate)
     {
-        $taxRate = TaxRate::findOrFail($id);
-        $this->authorize('update', $taxRate);
-
-        $validated = $request->validate([
-            'name' => 'sometimes|string',
-            'country' => 'sometimes|string|size:2',
-            'state' => 'nullable|string',
-            'rate' => 'sometimes|numeric|min:0|max:100',
-            'tax_type' => 'sometimes|in:vat,sales,gst,hst,pst,service,custom',
-            'is_active' => 'boolean'
-        ]);
-
-        $taxRate->update($validated);
+        $this->authorize('view', $taxRate);
         return response()->json($taxRate);
     }
 
-    public function destroy($id)
+    public function update(TaxRateData $data, TaxRate $taxRate)
     {
-        $taxRate = TaxRate::findOrFail($id);
+        $this->authorize('update', $taxRate);
+        $taxRate->update($data->toArray());
+        return response()->json($taxRate);
+    }
+
+    public function destroy(TaxRate $taxRate)
+    {
         $this->authorize('delete', $taxRate);
         $taxRate->delete();
-        return response()->json(['message' => 'Tax Rate deleted']);
+        return response()->json(null, 204);
     }
 }

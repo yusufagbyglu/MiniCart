@@ -79,4 +79,16 @@ class ReviewController extends Controller
 
         return response()->json(['message' => 'Review deleted successfully.']);
     }
+
+    public function approve(Review $review)
+    {
+        $this->authorize('approve', $review);
+
+        $review->update(['is_approved' => true]);
+
+        return response()->json([
+            'message' => 'Review approved successfully.',
+            'review' => $review
+        ]);
+    }
 }

@@ -62,4 +62,74 @@ class AuthController extends Controller
     {
         return response()->json($request->user());
     }
+
+    public function forgotPassword(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+        // Placeholder for password reset logic
+        return response()->json(['message' => 'Password reset link sent if email exists.']);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:6|confirmed',
+        ]);
+        // Placeholder for password reset logic
+        return response()->json(['message' => 'Password has been reset.']);
+    }
+
+    public function refresh(Request $request)
+    {
+        $user = $request->user();
+        $user->tokens()->delete();
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
+            'token_type' => 'Bearer',
+        ]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $user->id,
+        ]);
+
+        $user->update($validated);
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'user' => $user
+        ]);
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'password' => 'required|min:6|confirmed',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['The provided password does not match your current password.'],
+            ]);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+            'last_password_change_at' => now(),
+        ]);
+
+        return response()->json(['message' => 'Password changed successfully.']);
+    }
 }

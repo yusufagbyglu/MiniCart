@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\v1\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use App\Data\UpdateOrderStatusData;
 
 class OrderController extends Controller
 {
@@ -22,15 +23,11 @@ class OrderController extends Controller
         return response()->json($order);
     }
 
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(UpdateOrderStatusData $data, $id)
     {
-        $request->validate([
-            'status' => 'required|in:pending,confirmed,processing,shipped,delivered,cancelled,refunded'
-        ]);
-
         $order = Order::findOrFail($id);
         $this->authorize('updateStatus', $order);
-        $order->update(['status' => $request->status]);
+        $order->update(['status' => $data->status]);
 
         return response()->json(['message' => 'Order status updated', 'order' => $order]);
     }
