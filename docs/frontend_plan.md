@@ -12,6 +12,7 @@ This document outlines the architecture, file structure, and design strategy for
 - **API Client**: Axios
 - **Icons**: Lucide React
 - **Animations**: Framer Motion
+- **UI Components**: shadcn/ui (Radix UI + Tailwind)
 
 ---
 
@@ -34,7 +35,7 @@ frontend/
 │   │   ├── layout.tsx      # Root layout
 │   │   └── globals.css     # Tailwind & global styles
 │   ├── components/
-│   │   ├── ui/             # Reusable base components (Button, Input, Badge, Modal)
+│   │   ├── ui/             # shadcn/ui base components (Button, Input, Badge, Modal)
 │   │   ├── layout/         # Navigation, Footer, Mobile Menu
 │   │   ├── product/        # ProductCard, PriceDisplay, ProductGrid
 │   │   ├── cart/           # CartDrawer, CartItem, QuickAdd
