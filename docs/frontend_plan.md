@@ -29,25 +29,169 @@ frontend/
 │   │   │   ├── [slug]/     # Product details (Dynamic Route)
 │   │   │   └── page.tsx    # Home Page (Featured products/categories)
 │   │   ├── admin/          # Admin Dashboard & management
+│   │   │   ├── dashboard/  # Overview stats
+│   │   │   ├── products/   # Product management
+│   │   │   ├── orders/     # Order management
+│   │   │   ├── categories/ # Category management
+│   │   │   ├── coupons/    # Coupon management
+│   │   │   ├── users/      # User & role management
+│   │   │   ├── audit/      # 🆕 Audit log viewer
+│   │   │   ├── stock/      # 🆕 Stock tracking & alerts
+│   │   │   └── reviews/    # 🆕 Review moderation (Pending approvals)
 │   │   ├── cart/           # Shopping Cart page
 │   │   ├── checkout/       # Multi-step checkout process
 │   │   ├── dashboard/      # User account & order history
+│   │   │   ├── profile/    # Profile settings
+│   │   │   ├── orders/     # Order history
+│   │   │   ├── addresses/  # 🆕 Address management (add/edit/delete)
+│   │   │   ├── reviews/    # 🆕 User's submitted reviews
+│   │   │   ├── notifications/ # 🆕 Notification center
+│   │   │   └── settings/   # Account settings
+│   │   ├── orders/
+│   │   │   └── [orderNumber]/
+│   │   │       └── track/  # 🆕 Order tracking page
+│   │   │           └── page.tsx
+│   │   ├── wishlist/       # 🆕 User wishlist page
+│   │   │   └── page.tsx
 │   │   ├── layout.tsx      # Root layout
 │   │   └── globals.css     # Tailwind & global styles
+│   │
 │   ├── components/
-│   │   ├── ui/             # shadcn/ui base components (Button, Input, Badge, Modal)
+│   │   ├── ui/             # shadcn/ui base components
+│   │   │   ├── button.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── badge.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── dialog.tsx
+│   │   │   ├── dropdown-menu.tsx
+│   │   │   ├── select.tsx
+│   │   │   ├── toast.tsx
+│   │   │   └── ...
+│   │   │
 │   │   ├── layout/         # Navigation, Footer, Mobile Menu
-│   │   ├── product/        # ProductCard, PriceDisplay, ProductGrid
-│   │   ├── cart/           # CartDrawer, CartItem, QuickAdd
-│   │   └── checkout/       # ShippingForm, PaymentMock, OrderSummary
-│   ├── hooks/              # Custom React hooks (useAuth, useCart, useLocalPersistence)
-│   ├── lib/                # Configured instances (axios, queryClient, utils)
-│   ├── services/           # API service layers (AuthService, ProductService, OrderService)
-│   ├── store/              # Zustand stores (useCartStore, useUserStore)
-│   └── types/              # TypeScript interfaces/types matching Backend DTOs
-├── tailwind.config.ts      # Custom theme colors (Premium Slate, Emerald, Gold)
+│   │   │   ├── Header.tsx
+│   │   │   ├── Footer.tsx
+│   │   │   ├── MobileNav.tsx
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── NotificationBell.tsx    # 🆕 Header notification icon
+│   │   │   ├── NotificationDrawer.tsx  # 🆕 Notification side panel
+│   │   │   └── CurrencySelector.tsx    # 🆕 Currency switcher
+│   │   │
+│   │   ├── product/        # Product related components
+│   │   │   ├── ProductCard.tsx
+│   │   │   ├── ProductGrid.tsx
+│   │   │   ├── PriceDisplay.tsx
+│   │   │   ├── ProductImageGallery.tsx
+│   │   │   ├── StockBadge.tsx          # 🆕 "Only 3 left!" warning
+│   │   │   └── OutOfStockNotification.tsx # 🆕 "Notify when available"
+│   │   │
+│   │   ├── cart/           # Shopping cart components
+│   │   │   ├── CartDrawer.tsx
+│   │   │   ├── CartItem.tsx
+│   │   │   ├── QuickAddToCart.tsx
+│   │   │   └── MiniCart.tsx
+│   │   │
+│   │   ├── checkout/       # Checkout flow components
+│   │   │   ├── ShippingForm.tsx
+│   │   │   ├── PaymentMock.tsx
+│   │   │   ├── OrderSummary.tsx
+│   │   │   ├── CouponInput.tsx         # 🆕 Coupon code input
+│   │   │   ├── CouponValidation.tsx    # 🆕 Real-time validation feedback
+│   │   │   ├── AvailableCoupons.tsx    # 🆕 Available coupons list
+│   │   │   └── TaxBreakdown.tsx        # 🆕 Tax details display
+│   │   │
+│   │   ├── review/         # 🆕 Review system components
+│   │   │   ├── ReviewForm.tsx          # Write review form
+│   │   │   ├── ReviewList.tsx          # Display reviews on product page
+│   │   │   ├── RatingStars.tsx         # 5-star rating display
+│   │   │   ├── ReviewModerationBadge.tsx # "Pending approval" indicator
+│   │   │   └── ReviewFilter.tsx        # Filter by star rating
+│   │   │
+│   │   ├── wishlist/       # 🆕 Wishlist components
+│   │   │   ├── WishlistButton.tsx      # Heart icon for product cards
+│   │   │   ├── WishlistGrid.tsx        # Wishlist page grid
+│   │   │   └── WishlistItem.tsx        # Individual wishlist item
+│   │   │
+│   │   ├── address/        # 🆕 Address management components
+│   │   │   ├── AddressCard.tsx         # Display address with default badge
+│   │   │   ├── AddressForm.tsx         # Add/Edit address form
+│   │   │   ├── AddressSelector.tsx     # Select address in checkout
+│   │   │   └── AddressTypeToggle.tsx   # Shipping/Billing toggle
+│   │   │
+│   │   ├── notification/   # 🆕 Notification components
+│   │   │   ├── NotificationItem.tsx    # Single notification
+│   │   │   ├── NotificationList.tsx    # List all notifications
+│   │   │   └── NotificationBadge.tsx   # Unread count badge
+│   │   │
+│   │   ├── order/          # Order related components
+│   │   │   ├── OrderCard.tsx
+│   │   │   ├── OrderStatusBadge.tsx
+│   │   │   ├── OrderTimeline.tsx       # 🆕 Order tracking timeline
+│   │   │   └── TrackingInfo.tsx        # 🆕 Tracking number & carrier
+│   │   │
+│   │   └── admin/          # Admin specific components
+│   │       ├── StatsCard.tsx
+│   │       ├── DataTable.tsx
+│   │       ├── StockAlert.tsx          # 🆕 Low stock warnings
+│   │       └── AuditLogTable.tsx       # 🆕 Audit log display
+│   │
+│   ├── hooks/              # Custom React hooks
+│   │   ├── useAuth.ts              # Authentication state & actions
+│   │   ├── useCart.ts              # Cart operations
+│   │   ├── useLocalPersistence.ts  # LocalStorage sync
+│   │   ├── usePermission.ts        # 🆕 Check user permissions
+│   │   ├── useCurrency.ts          # 🆕 Active currency management
+│   │   ├── useNotifications.ts     # 🆕 Polling/WebSocket for notifications
+│   │   ├── useWishlist.ts          # 🆕 Wishlist operations
+│   │   └── useDebounce.ts          # Debounce for search inputs
+│   │
+│   ├── lib/                # Configured instances & utilities
+│   │   ├── axios.ts                # Axios instance with interceptors
+│   │   ├── queryClient.ts          # TanStack Query configuration
+│   │   ├── utils.ts                # General utility functions
+│   │   ├── currencyFormatter.ts    # 🆕 Format prices with currency
+│   │   └── validators.ts           # Form validation helpers
+│   │
+│   ├── services/           # API service layers
+│   │   ├── AuthService.ts
+│   │   ├── ProductService.ts
+│   │   ├── CategoryService.ts
+│   │   ├── CartService.ts
+│   │   ├── OrderService.ts
+│   │   ├── CouponService.ts
+│   │   ├── WishlistService.ts      # 🆕 Wishlist API calls
+│   │   ├── NotificationService.ts  # 🆕 Notification API calls
+│   │   ├── ReviewService.ts        # 🆕 Review API calls
+│   │   ├── AddressService.ts       # 🆕 Address CRUD operations
+│   │   └── UserService.ts
+│   │
+│   ├── store/              # Zustand stores
+│   │   ├── useCartStore.ts
+│   │   ├── useUserStore.ts
+│   │   ├── useWishlistStore.ts     # 🆕 Wishlist state
+│   │   ├── useCurrencyStore.ts     # 🆕 Currency state
+│   │   └── useNotificationStore.ts # 🆕 Notification state
+│   │
+│   ├── types/              # TypeScript interfaces/types
+│   │   ├── auth.ts
+│   │   ├── product.ts
+│   │   ├── cart.ts
+│   │   ├── order.ts
+│   │   ├── coupon.ts
+│   │   ├── review.ts               # 🆕 Review types
+│   │   ├── wishlist.ts             # 🆕 Wishlist types
+│   │   ├── notification.ts         # 🆕 Notification types
+│   │   ├── address.ts              # 🆕 Address types
+│   │   ├── user.ts
+│   │   └── api.ts
+│   │
+│   └── middleware.ts       # 🆕 Next.js middleware for route guards
+│
+├── tailwind.config.ts      # Custom theme (Premium Slate, Emerald, Gold)
 ├── next.config.js
-└── tsconfig.json
+├── tsconfig.json
+├── .env.local
+└── package.json
 ```
 
 ---
