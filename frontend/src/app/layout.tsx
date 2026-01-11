@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
 import { cn } from "@/lib/utils";
 import QueryProvider from "@/components/providers/QueryProvider";
 
@@ -36,11 +34,7 @@ export default function RootLayout({
                 )}
             >
                 <QueryProvider>
-                    <Header />
-                    <main className="relative flex min-h-screen flex-col pt-20">
-                        {children}
-                    </main>
-                    <Footer />
+                    {children}
                 </QueryProvider>
             </body>
         </html>
