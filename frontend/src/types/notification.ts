@@ -1,14 +1,13 @@
+export type NotificationType = "order" | "payment" | "system" | "promotion"
+
 export interface Notification {
-    id: string;
-    type: string;
-    notifiable_type: string;
-    notifiable_id: number;
-    data: {
-        title: string;
-        message: string;
-        action_url?: string;
-    };
-    read_at: string | null;
-    created_at: string;
-    updated_at: string;
+  id: number
+  user_id: number
+  type: NotificationType
+  title: string
+  message: string
+  data: Record<string, unknown> | null
+  is_read: boolean
+  read_at: string | null
+  created_at: string
 }

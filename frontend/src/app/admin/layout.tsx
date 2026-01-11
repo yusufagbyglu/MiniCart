@@ -1,16 +1,13 @@
 "use client";
 
-import { useSidebar } from "@/src/context/SidebarContext";
+import { SidebarProvider, useSidebar } from "@/src/context/SidebarContext";
+import { ThemeProvider } from "@/src/context/ThemeContext";
 import AppHeader from "@/src/components/admin/layout/AppHeader";
 import AppSidebar from "@/src/components/admin/layout/AppSidebar";
 import Backdrop from "@/src/components/admin/layout/Backdrop";
 import React from "react";
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
   // Dynamic class for main content margin based on sidebar state
@@ -35,5 +32,19 @@ export default function AdminLayout({
         <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">{children}</div>
       </div>
     </div>
+  );
+}
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <SidebarProvider>
+      <ThemeProvider>
+        <AdminLayoutContent>{children}</AdminLayoutContent>
+      </ThemeProvider>
+    </SidebarProvider>
   );
 }
