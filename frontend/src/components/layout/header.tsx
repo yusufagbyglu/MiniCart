@@ -30,7 +30,7 @@ const navigation = [
   { name: "Sale", href: "/products?sale=true" },
 ]
 
-export function Navbar() {
+export function Header() {
   const pathname = usePathname()
   const [searchOpen, setSearchOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)

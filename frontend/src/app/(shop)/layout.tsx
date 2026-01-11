@@ -1,6 +1,7 @@
 import type React from "react"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
+// import { Providers } from "@/components/providers"
 import { Providers } from "@/components/providers"
 import { CartDrawer } from "@/components/cart/cart-drawer"
 
