@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/src/components/layout/Navbar";
-import { Footer } from "@/src/components/layout/Footer";
-import { cn } from "@/src/lib/utils";
-import QueryProvider from "@/src/components/providers/QueryProvider";
+import { Navbar } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
+import { cn } from "@/lib/utils";
+import QueryProvider from "@/components/providers/QueryProvider";
 
 const inter = Inter({
     variable: "--font-inter",
