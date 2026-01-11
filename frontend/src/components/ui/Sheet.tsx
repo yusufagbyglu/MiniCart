@@ -3,7 +3,7 @@
 import * as React from "react"
 import { X } from "lucide-react"
 import { cn } from "@/src/lib/utils"
-import { Button } from "./Button"
+import { Button } from "./button"
 
 interface SheetProps {
     open: boolean

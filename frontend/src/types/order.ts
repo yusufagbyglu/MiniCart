@@ -26,3 +26,23 @@ export interface OrderItem {
     created_at: string;
     updated_at: string;
 }
+
+export interface CheckoutFormData {
+    shipping_address: {
+        street: string;
+        city: string;
+        state: string;
+        zip_code: string;
+        country: string;
+    };
+    billing_address?: {
+        street: string;
+        city: string;
+        state: string;
+        zip_code: string;
+        country: string;
+    };
+    payment_method: 'credit_card' | 'paypal' | 'bank_transfer';
+    coupon_code?: string;
+}
+

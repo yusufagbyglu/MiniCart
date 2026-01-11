@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ProductService } from "@/src/services/ProductService";
-import type { Product } from "@/src/types";
+import type { Product } from "@/src/types/product";
 
 // Query keys
 export const productKeys = {

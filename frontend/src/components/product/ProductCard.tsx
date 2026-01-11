@@ -4,9 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ShoppingCart, Heart, Eye } from "lucide-react";
-import { Button } from "./Button";
-import { Badge } from "./Badge";
-import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { cn } from "@/src/lib/utils";
 
 interface ProductCardProps {
     product: {
@@ -88,7 +88,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
                         )}
                     </div>
                     <div className="flex items-center gap-1 text-[10px] font-medium text-amber-500">
-                        ★ <span className="text-gray-600">4.8</span>
+                        Ã¢Ëœâ€¦ <span className="text-gray-600">4.8</span>
                     </div>
                 </div>
             </div>

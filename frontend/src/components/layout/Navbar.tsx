@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { Search, ShoppingBag, User, Menu, X, Heart } from "lucide-react";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
 import { cn } from "@/src/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { CartDrawer } from "../cart/CartDrawer";

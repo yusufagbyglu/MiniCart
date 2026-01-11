@@ -1,5 +1,7 @@
-import api from "@/src/lib/api";
-import { User, AuthUser, LoginFormData, RegisterFormData, ApiResponse } from "@/src/types";
+import api from "@/src/lib/axios";
+import { User } from "@/src/types/user";
+import { AuthUser, LoginFormData, RegisterFormData } from "@/src/types/auth";
+import { ApiResponse } from "@/src/types/api";
 
 export const AuthService = {
     // Login

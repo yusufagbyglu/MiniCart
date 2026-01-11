@@ -1,5 +1,6 @@
-import api from "@/src/lib/api";
-import { Order, OrderItem, CheckoutFormData, ApiResponse, PaginatedResponse } from "@/src/types";
+import api from "@/src/lib/axios";
+import { Order, CheckoutFormData } from "@/src/types/order";
+import { ApiResponse, PaginatedResponse } from "@/src/types/api";
 
 export const OrderService = {
     // Create order (checkout)

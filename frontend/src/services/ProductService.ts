@@ -1,5 +1,6 @@
-import api from "@/src/lib/api";
-import { Product, ApiResponse, PaginatedResponse } from "@/src/types";
+import api from "@/src/lib/axios";
+import { Product } from "@/src/types/product";
+import { ApiResponse, PaginatedResponse } from "@/src/types/api";
 
 export const ProductService = {
     getAll: async (): Promise<Product[]> => {

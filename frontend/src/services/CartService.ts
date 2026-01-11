@@ -1,5 +1,6 @@
-import api from "@/src/lib/api";
-import { Cart, CartItem, ApiResponse } from "@/src/types";
+import api from "@/src/lib/axios";
+import { Cart } from "@/src/types/cart";
+import { ApiResponse } from "@/src/types/api";
 
 export const CartService = {
     // Get current cart

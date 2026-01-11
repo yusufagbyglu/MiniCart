@@ -3,7 +3,7 @@
 import * as React from "react";
 import { X, ShoppingBag, Trash2, Plus, Minus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "../ui/Button";
+import { Button } from "../ui/button";
 import { useCartStore } from "@/src/store/useCartStore";
 import Image from "next/image";
 import Link from "next/link";
