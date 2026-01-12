@@ -4,8 +4,6 @@ import type {
   Product, 
   ProductFilters, 
   Category,
-  CreateProductData,
-  UpdateProductData
 } from '@/types/product'
 
 class ProductService extends BaseService {
