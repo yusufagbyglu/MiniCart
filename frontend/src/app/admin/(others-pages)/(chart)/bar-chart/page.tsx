@@ -1,6 +1,6 @@
-import BarChartOne from "@/src/components/admin/charts/bar/BarChartOne";
-import ComponentCard from "@/src/components/admin/common/ComponentCard";
-import PageBreadcrumb from "@/src/components/admin/common/PageBreadCrumb";
+import BarChartOne from "@/components/admin/charts/bar/BarChartOne";
+import ComponentCard from "@/components/admin/common/ComponentCard";
+import PageBreadcrumb from "@/components/admin/common/PageBreadCrumb";
 import { Metadata } from "next";
 import React from "react";
 

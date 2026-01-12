@@ -1,10 +1,10 @@
 "use client";
 
-import { SidebarProvider, useSidebar } from "@/src/context/SidebarContext";
-import { ThemeProvider } from "@/src/context/ThemeContext";
-import AppHeader from "@/src/components/admin/layout/AppHeader";
-import AppSidebar from "@/src/components/admin/layout/AppSidebar";
-import Backdrop from "@/src/components/admin/layout/Backdrop";
+import { SidebarProvider, useSidebar } from "@/context/SidebarContext";
+import { ThemeProvider } from "@/context/ThemeContext";
+import AppHeader from "@/components/admin/layout/AppHeader";
+import AppSidebar from "@/components/admin/layout/AppSidebar";
+import Backdrop from "@/components/admin/layout/Backdrop";
 import React from "react";
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
