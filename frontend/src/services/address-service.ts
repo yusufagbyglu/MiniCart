@@ -1,29 +1,62 @@
-import api from "@/lib/axios"
-import type { UserAddress, CreateAddressData, UpdateAddressData } from "@/types/address"
-import type { ApiResponse } from "@/types/api"
+import { BaseService } from './base-service'
+import type { 
+  UserAddress, 
+  CreateAddressData, 
+  UpdateAddressData 
+} from '@/types/address'
+import type { ApiResponse } from '@/types/api'
 
-export const AddressService = {
-  async getAddresses(): Promise<UserAddress[]> {
-    const response = await api.get<ApiResponse<UserAddress[]>>("/user/addresses")
-    return response.data.data
-  },
+class AddressService extends BaseService {
+  private static instance: AddressService
 
-  async getAddress(id: number): Promise<UserAddress> {
-    const response = await api.get<ApiResponse<UserAddress>>(`/user/addresses/${id}`)
-    return response.data.data
-  },
+  private constructor() {
+    super()
+  }
 
-  async createAddress(data: CreateAddressData): Promise<UserAddress> {
-    const response = await api.post<ApiResponse<UserAddress>>("/user/addresses", data)
-    return response.data.data
-  },
+  public static getInstance(): AddressService {
+    if (!AddressService.instance) {
+      AddressService.instance = new AddressService()
+    }
+    return AddressService.instance
+  }
 
-  async updateAddress(id: number, data: UpdateAddressData): Promise<UserAddress> {
-    const response = await api.put<ApiResponse<UserAddress>>(`/user/addresses/${id}`, data)
-    return response.data.data
-  },
+  public async getAddresses(): Promise<UserAddress[]> {
+    const response = await this.get<ApiResponse<UserAddress[]>>('/user/addresses')
+    return response.data
+  }
 
-  async deleteAddress(id: number): Promise<void> {
-    await api.delete(`/user/addresses/${id}`)
-  },
+  public async getAddress(id: number): Promise<UserAddress> {
+    const response = await this.get<ApiResponse<UserAddress>>(`/user/addresses/${id}`)
+    return response.data
+  }
+
+  public async createAddress(data: CreateAddressData): Promise<UserAddress> {
+    const response = await this.post<ApiResponse<UserAddress>>('/user/addresses', data)
+    return response.data
+  }
+
+  public async updateAddress(id: number, data: UpdateAddressData): Promise<UserAddress> {
+    const response = await this.put<ApiResponse<UserAddress>>(`/user/addresses/${id}`, data)
+    return response.data
+  }
+
+  public async deleteAddress(id: number): Promise<void> {
+    await this.delete(`/user/addresses/${id}`)
+  }
+
+  public async setDefaultAddress(id: number): Promise<UserAddress> {
+    const response = await this.post<ApiResponse<UserAddress>>(`/user/addresses/${id}/set-default`)
+    return response.data
+  }
+
+  public async getDefaultAddress(): Promise<UserAddress | null> {
+    try {
+      const response = await this.get<ApiResponse<UserAddress>>('/user/addresses/default')
+      return response.data
+    } catch (error) {
+      return null
+    }
+  }
 }
+
+export const addressService = AddressService.getInstance()

@@ -1,4 +1,3 @@
-// src/services/auth-service.ts
 import { BaseService } from './base-service'
 import type { 
   LoginCredentials, 

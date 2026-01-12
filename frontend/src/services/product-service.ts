@@ -1,4 +1,3 @@
-// src/services/product-service.ts
 import { BaseService } from './base-service'
 import type { 
   Product, 

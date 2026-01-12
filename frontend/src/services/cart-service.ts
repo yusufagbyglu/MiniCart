@@ -1,4 +1,3 @@
-// src/services/cart-service.ts
 import { BaseService } from './base-service'
 import type { Cart, CartItem } from '@/types/cart'
 

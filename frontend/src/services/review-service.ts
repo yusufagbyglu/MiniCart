@@ -1,4 +1,3 @@
-// src/services/review-service.ts
 import { BaseService } from './base-service'
 import type { Review, CreateReviewData, UpdateReviewData } from '@/types/review'
 

@@ -1,4 +1,3 @@
-// src/services/wishlist-service.ts
 import { BaseService } from './base-service'
 import type { Product } from '@/types/product'
 
