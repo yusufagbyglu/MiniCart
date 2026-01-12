@@ -22,4 +22,12 @@ export class BaseService {
     const response = await api.delete<ApiResponse<T>>(url, config)
     return response.data.data
   }
+
+  protected async uploadFile<T>(url: string, file: File, fieldName = 'file'): Promise<T> {
+    const formData = new FormData()
+    formData.append(fieldName, file)
+    return this.post<T>(url, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  }
 }
