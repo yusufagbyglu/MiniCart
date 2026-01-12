@@ -1,35 +1,44 @@
-import api from "@/lib/axios"
-import type { Cart, AddToCartData, UpdateCartItemData } from "@/types/cart"
-import type { ApiResponse } from "@/types/api"
+// src/services/cart-service.ts
+import { BaseService } from './base-service'
+import type { Cart, CartItem } from '@/types/cart'
 
-export const CartService = {
-  async getCart(): Promise<Cart> {
-    const response = await api.get<ApiResponse<Cart>>("/cart")
-    return response.data.data
-  },
+class CartService extends BaseService {
+  private static instance: CartService
 
-  async addItem(data: AddToCartData): Promise<Cart> {
-    const response = await api.post<ApiResponse<Cart>>("/cart/items", data)
-    return response.data.data
-  },
+  private constructor() {
+    super()
+  }
 
-  async updateItem(itemId: number, data: UpdateCartItemData): Promise<Cart> {
-    const response = await api.put<ApiResponse<Cart>>(`/cart/items/${itemId}`, data)
-    return response.data.data
-  },
+  public static getInstance(): CartService {
+    if (!CartService.instance) {
+      CartService.instance = new CartService()
+    }
+    return CartService.instance
+  }
 
-  async removeItem(itemId: number): Promise<Cart> {
-    const response = await api.delete<ApiResponse<Cart>>(`/cart/items/${itemId}`)
-    return response.data.data
-  },
+  public async getCart(): Promise<Cart> {
+    return this.get<Cart>('/cart')
+  }
 
-  async applyCoupon(code: string): Promise<Cart> {
-    const response = await api.post<ApiResponse<Cart>>("/cart/apply-coupon", { code })
-    return response.data.data
-  },
+  public async addToCart(item: CartItem): Promise<Cart> {
+    return this.post<Cart>('/cart/items', item)
+  }
 
-  async removeCoupon(): Promise<Cart> {
-    const response = await api.delete<ApiResponse<Cart>>("/cart/remove-coupon")
-    return response.data.data
-  },
+  public async updateCartItem(itemId: number, quantity: number): Promise<Cart> {
+    return this.put<Cart>(`/cart/items/${itemId}`, { quantity })
+  }
+
+  public async removeFromCart(itemId: number): Promise<void> {
+    await this.delete(`/cart/items/${itemId}`)
+  }
+
+  public async applyCoupon(code: string): Promise<Cart> {
+    return this.post<Cart>('/cart/apply-coupon', { code })
+  }
+
+  public async removeCoupon(): Promise<Cart> {
+    return this.delete<Cart>('/cart/remove-coupon')
+  }
 }
+
+export const cartService = CartService.getInstance()

@@ -18,7 +18,8 @@ export class BaseService {
     return response.data.data
   }
 
-  protected async delete<T>(url: string, config = {}): Promise<void> {
-    await api.delete(url, config)
+  protected async delete<T = void>(url: string, config = {}): Promise<T> {
+    const response = await api.delete<ApiResponse<T>>(url, config)
+    return response.data.data
   }
 }
