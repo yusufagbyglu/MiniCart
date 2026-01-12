@@ -1,19 +1,37 @@
-import api from "@/lib/axios"
-import type { WishlistItem } from "@/types/wishlist"
-import type { ApiResponse } from "@/types/api"
+// src/services/wishlist-service.ts
+import { BaseService } from './base-service'
+import type { Product } from '@/types/product'
 
-export const WishlistService = {
-  async getWishlist(): Promise<WishlistItem[]> {
-    const response = await api.get<ApiResponse<WishlistItem[]>>("/user/wishlist")
-    return response.data.data
-  },
+class WishlistService extends BaseService {
+  private static instance: WishlistService
 
-  async addToWishlist(productId: number): Promise<WishlistItem> {
-    const response = await api.post<ApiResponse<WishlistItem>>(`/user/wishlist/${productId}`)
-    return response.data.data
-  },
+  private constructor() {
+    super()
+  }
 
-  async removeFromWishlist(productId: number): Promise<void> {
-    await api.delete(`/user/wishlist/${productId}`)
-  },
+  public static getInstance(): WishlistService {
+    if (!WishlistService.instance) {
+      WishlistService.instance = new WishlistService()
+    }
+    return WishlistService.instance
+  }
+
+  public async getWishlist(): Promise<Product[]> {
+    return this.get<Product[]>('/wishlist')
+  }
+
+  public async addToWishlist(productId: number): Promise<void> {
+    await this.post(`/wishlist/${productId}`)
+  }
+
+  public async removeFromWishlist(productId: number): Promise<void> {
+    await this.delete(`/wishlist/${productId}`)
+  }
+
+  public async isInWishlist(productId: number): Promise<boolean> {
+    const wishlist = await this.getWishlist()
+    return wishlist.some(item => item.id === productId)
+  }
 }
+
+export const wishlistService = WishlistService.getInstance()
