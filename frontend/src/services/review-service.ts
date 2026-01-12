@@ -1,36 +1,40 @@
-import api from "@/lib/axios"
-import type { Review, CreateReviewData, UpdateReviewData } from "@/types/review"
-import type { ApiResponse, PaginatedResponse } from "@/types/api"
+// src/services/review-service.ts
+import { BaseService } from './base-service'
+import type { Review, CreateReviewData, UpdateReviewData } from '@/types/review'
 
-export const ReviewService = {
-  async getProductReviews(productId: number, page = 1): Promise<PaginatedResponse<Review>> {
-    const response = await api.get<PaginatedResponse<Review>>(`/products/${productId}/reviews`, {
-      params: { page },
-    })
-    return response.data
-  },
+class ReviewService extends BaseService {
+  private static instance: ReviewService
 
-  async createReview(productId: number, data: CreateReviewData): Promise<Review> {
-    const response = await api.post<ApiResponse<Review>>(`/products/${productId}/reviews`, data)
-    return response.data.data
-  },
+  private constructor() {
+    super()
+  }
 
-  async updateReview(reviewId: number, data: UpdateReviewData): Promise<Review> {
-    const response = await api.put<ApiResponse<Review>>(`/reviews/${reviewId}`, data)
-    return response.data.data
-  },
+  public static getInstance(): ReviewService {
+    if (!ReviewService.instance) {
+      ReviewService.instance = new ReviewService()
+    }
+    return ReviewService.instance
+  }
 
-  async deleteReview(reviewId: number): Promise<void> {
-    await api.delete(`/reviews/${reviewId}`)
-  },
+  public async getProductReviews(productId: number): Promise<Review[]> {
+    return this.get<Review[]>(`/products/${productId}/reviews`)
+  }
 
-  // Admin endpoints
-  async approveReview(reviewId: number): Promise<Review> {
-    const response = await api.post<ApiResponse<Review>>(`/admin/reviews/${reviewId}/approve`)
-    return response.data.data
-  },
+  public async getUserReviews(): Promise<Review[]> {
+    return this.get<Review[]>('/user/reviews')
+  }
 
-  async adminDeleteReview(reviewId: number): Promise<void> {
-    await api.delete(`/admin/reviews/${reviewId}`)
-  },
+  public async createReview(productId: number, data: CreateReviewData): Promise<Review> {
+    return this.post<Review>(`/products/${productId}/reviews`, data)
+  }
+
+  public async updateReview(reviewId: number, data: UpdateReviewData): Promise<Review> {
+    return this.put<Review>(`/reviews/${reviewId}`, data)
+  }
+
+  public async deleteReview(reviewId: number): Promise<void> {
+    await this.delete(`/reviews/${reviewId}`)
+  }
 }
+
+export const reviewService = ReviewService.getInstance()
