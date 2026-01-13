@@ -11,8 +11,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
-import { useUserStore } from "@/stores/user-store"
-import { authApi } from "@/lib/api/auth"
+import { useUserStore } from "@/store/user-store"
+import { authService } from "@/services/auth-service"
 
 interface LoginFormData {
   email: string
@@ -43,7 +43,7 @@ function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
-      const response = await authApi.login({
+      const response = await authService.login({
         email: data.email,
         password: data.password,
       })
@@ -54,7 +54,7 @@ function LoginForm() {
     } catch (error: any) {
       toast({
         title: "Login failed",
-        description: error.response?.data?.message || "Invalid email or password",
+        description: error.message || "Invalid email or password",
         variant: "destructive",
       })
     } finally {

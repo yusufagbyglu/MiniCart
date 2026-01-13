@@ -1,5 +1,5 @@
 import { BaseService } from './base-service'
-import type { Cart, CartItem } from '@/types/cart'
+import type { AddToCartData, Cart, CartItem } from '@/types/cart'
 
 class CartService extends BaseService {
   private static instance: CartService
@@ -19,7 +19,7 @@ class CartService extends BaseService {
     return this.get<Cart>('/cart')
   }
 
-  public async addToCart(item: CartItem): Promise<Cart> {
+  public async addToCart(item: AddToCartData): Promise<Cart> {
     return this.post<Cart>('/cart/items', item)
   }
 

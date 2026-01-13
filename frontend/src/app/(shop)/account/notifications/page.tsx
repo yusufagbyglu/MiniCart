@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/hooks/use-toast"
-import { useNotificationStore } from "@/stores/notification-store"
+import { useNotificationStore } from "@/store/notification-store"
 import { notificationApi } from "@/lib/api/notification"
 import { cn } from "@/lib/utils"
 

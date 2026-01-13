@@ -43,6 +43,7 @@
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "19.2.3",
     "react-dropzone": "^14.3.8",
+    "react-hook-form": "^7.71.0",
     "swiper": "^12.0.3",
     "tailwind-merge": "^3.4.0",
     "zustand": "^5.0.9"

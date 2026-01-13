@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
-import { useUserStore } from "@/stores/user-store"
+import { useUserStore } from "@/store/user-store"
 import { authApi } from "@/lib/api/auth"
 
 interface RegisterFormData {

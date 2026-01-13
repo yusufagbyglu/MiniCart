@@ -3,9 +3,9 @@
 import { useCallback } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCartStore } from "@/store/cart-store"
-import { CartService } from "@/services/cart-service"
+import { cartService } from "@/services/cart-service"
 import { useToast } from "@/hooks/use-toast"
-import type { AddToCartData } from "@/types/cart"
+import type { AddToCartData, Cart } from "@/types/cart"
 
 export function useCart() {
   const queryClient = useQueryClient()
@@ -15,13 +15,26 @@ export function useCart() {
   // Fetch cart
   const { isLoading, refetch } = useQuery({
     queryKey: ["cart"],
-    queryFn: CartService.getCart,
+    queryFn: () => cartService.getCart(),
     staleTime: 1000 * 60,
   })
+  
+  // Update cart in store when query data changes
+  const { data: cartData } = useQuery({
+    queryKey: ["cart"],
+    queryFn: () => cartService.getCart(),
+    staleTime: 1000 * 60,
+    enabled: false, // Don't fetch on mount, we already have the query above
+  })
+  
+  // Update cart in store when query data changes
+  if (cartData) {
+    setCart(cartData)
+  }
 
   // Add item mutation
   const addItemMutation = useMutation({
-    mutationFn: (data: AddToCartData) => CartService.addItem(data),
+    mutationFn: (data: AddToCartData) => cartService.addToCart(data),
     onSuccess: (data) => {
       setCart(data)
       queryClient.setQueryData(["cart"], data)
@@ -34,8 +47,8 @@ export function useCart() {
 
   // Update item mutation
   const updateItemMutation = useMutation({
-    mutationFn: ({ itemId, quantity }: { itemId: number; quantity: number }) =>
-      CartService.updateItem(itemId, { quantity }),
+    mutationFn: (params: { itemId: number; quantity: number }) =>
+      cartService.updateCartItem(params.itemId, params.quantity),
     onSuccess: (data) => {
       setCart(data)
       queryClient.setQueryData(["cart"], data)
@@ -46,21 +59,21 @@ export function useCart() {
   })
 
   // Remove item mutation
-  const removeItemMutation = useMutation({
-    mutationFn: (itemId: number) => CartService.removeItem(itemId),
-    onSuccess: (data) => {
-      setCart(data)
-      queryClient.setQueryData(["cart"], data)
-      toast({ title: "Removed", description: "Item removed from cart." })
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" })
-    },
-  })
+const removeItemMutation = useMutation({
+  mutationFn: (itemId: number) => cartService.removeFromCart(itemId),
+  onSuccess: () => {
+    // Instead of using the response data, refetch the cart
+    queryClient.invalidateQueries({ queryKey: ['cart'] })
+    toast({ title: "Removed", description: "Item removed from cart." })
+  },
+  onError: (error: Error) => {
+    toast({ title: "Error", description: error.message, variant: "destructive" })
+  },
+})
 
   // Apply coupon mutation
   const applyCouponMutation = useMutation({
-    mutationFn: (code: string) => CartService.applyCoupon(code),
+    mutationFn: (code: string) => cartService.applyCoupon(code),
     onSuccess: (data) => {
       setCart(data)
       queryClient.setQueryData(["cart"], data)
@@ -73,7 +86,7 @@ export function useCart() {
 
   // Remove coupon mutation
   const removeCouponMutation = useMutation({
-    mutationFn: CartService.removeCoupon,
+    mutationFn: cartService.removeCoupon,
     onSuccess: (data) => {
       setCart(data)
       queryClient.setQueryData(["cart"], data)

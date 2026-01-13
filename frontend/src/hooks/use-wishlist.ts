@@ -3,7 +3,7 @@
 import { useCallback } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useWishlistStore } from "@/store/wishlist-store"
-import { WishlistService } from "@/services/wishlist-service"
+import { wishlistService } from "@/services/wishlist-service"
 import { useUserStore } from "@/store/user-store"
 import { useToast } from "@/hooks/use-toast"
 
@@ -16,16 +16,17 @@ export function useWishlist() {
   // Fetch wishlist
   useQuery({
     queryKey: ["wishlist"],
-    queryFn: WishlistService.getWishlist,
+    queryFn: wishlistService.getWishlist,
     enabled: isAuthenticated,
     staleTime: 1000 * 60 * 5,
   })
 
   // Add to wishlist mutation
   const addMutation = useMutation({
-    mutationFn: (productId: number) => WishlistService.addToWishlist(productId),
-    onSuccess: (data) => {
-      addItem(data)
+    mutationFn: (productId: number) => wishlistService.addToWishlist(productId),
+    onSuccess: () => {
+      // Since we don't get the item back from the API, we'll just invalidate the query
+      // which will trigger a refetch of the wishlist
       queryClient.invalidateQueries({ queryKey: ["wishlist"] })
       toast({ title: "Added to wishlist" })
     },
@@ -36,7 +37,7 @@ export function useWishlist() {
 
   // Remove from wishlist mutation
   const removeMutation = useMutation({
-    mutationFn: (productId: number) => WishlistService.removeFromWishlist(productId),
+    mutationFn: (productId: number) => wishlistService.removeFromWishlist(productId),
     onSuccess: (_, productId) => {
       removeItem(productId)
       queryClient.invalidateQueries({ queryKey: ["wishlist"] })

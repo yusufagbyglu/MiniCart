@@ -42,6 +42,10 @@ class AuthService extends BaseService {
     return this.get<User>('/user')
   }
 
+  public async getProfile(): Promise<User> {
+    return this.get<User>('/auth/me')
+  }
+
   public async updateProfile(data: Partial<User>): Promise<User> {
     return this.put<User>('/user/profile', data)
   }

@@ -4,7 +4,7 @@ import { useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useUserStore } from "@/store/user-store"
-import { AuthService } from "@/services/auth-service"
+import { authService } from "@/services/auth-service"
 import type { LoginCredentials, RegisterData } from "@/types/auth"
 import { useToast } from "@/hooks/use-toast"
 
@@ -17,7 +17,7 @@ export function useAuth() {
   // Fetch current user profile
   const { isLoading: isLoadingProfile, refetch: refetchProfile } = useQuery({
     queryKey: ["user", "profile"],
-    queryFn: AuthService.getProfile,
+    queryFn: () => authService.getProfile(),
     enabled: !!token,
     retry: false,
     staleTime: 1000 * 60 * 5,
@@ -25,7 +25,7 @@ export function useAuth() {
 
   // Login mutation
   const loginMutation = useMutation({
-    mutationFn: (credentials: LoginCredentials) => AuthService.login(credentials),
+    mutationFn: (credentials: LoginCredentials) => authService.login(credentials),
     onSuccess: (data) => {
       storeLogin(data.user, data.token)
       queryClient.invalidateQueries({ queryKey: ["user"] })
@@ -39,7 +39,7 @@ export function useAuth() {
 
   // Register mutation
   const registerMutation = useMutation({
-    mutationFn: (data: RegisterData) => AuthService.register(data),
+    mutationFn: (data: RegisterData) => authService.register(data),
     onSuccess: (data) => {
       storeLogin(data.user, data.token)
       queryClient.invalidateQueries({ queryKey: ["user"] })
@@ -53,7 +53,7 @@ export function useAuth() {
 
   // Logout mutation
   const logoutMutation = useMutation({
-    mutationFn: AuthService.logout,
+    mutationFn: () => authService.logout(),
     onSuccess: () => {
       storeLogout()
       queryClient.clear()
