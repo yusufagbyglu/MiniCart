@@ -3,6 +3,7 @@ import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import QueryProvider from "@/components/providers/QueryProvider";
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({
     variable: "--font-inter",
@@ -35,6 +36,7 @@ export default function RootLayout({
             >
                 <QueryProvider>
                     {children}
+                    <Toaster />
                 </QueryProvider>
             </body>
         </html>

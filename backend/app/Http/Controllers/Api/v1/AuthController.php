@@ -17,15 +17,18 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $data->name,
             'email' => $data->email,
-            'password' => bcrypt($data->password),
+            'password' => $data->password,
         ]);
 
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
-            'user' => $user,
-            'token' => $token,
-            'token_type' => 'Bearer',
+            'success' => true,
+            'data' => [
+                'user' => $user,
+                'token' => $token,
+                'token_type' => 'Bearer',
+            ]
         ], 201);
     }
 
@@ -42,9 +45,12 @@ class AuthController extends Controller
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
-            'user' => $user,
-            'token' => $token,
-            'token_type' => 'Bearer',
+            'success' => true,
+            'data' => [
+                'user' => $user,
+                'token' => $token,
+                'token_type' => 'Bearer',
+            ]
         ]);
     }
     public function logout(Request $request)

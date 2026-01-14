@@ -13,7 +13,9 @@ class UserObserver
     public function created(User $user): void
     {
         $defaultRole = Role::where('name', 'customer')->first();
-        $user->roles()->attach($defaultRole->id);
+        if ($defaultRole) {
+            $user->roles()->attach($defaultRole->id);
+        }
     }
 
     /**

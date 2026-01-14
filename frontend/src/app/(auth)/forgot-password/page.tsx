@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { authApi } from "@/lib/api/auth"
+import { authService } from "@/services/auth-service"
 
 interface ForgotPasswordFormData {
   email: string
@@ -29,12 +29,12 @@ export default function ForgotPasswordPage() {
   const onSubmit = async (data: ForgotPasswordFormData) => {
     setIsLoading(true)
     try {
-      await authApi.forgotPassword(data.email)
+      await authService.forgotPassword({ email: data.email })
       setIsSubmitted(true)
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to send reset email. Please try again.",
+        description: error.response?.data?.message || "Failed to send reset email. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -44,18 +44,17 @@ export default function ForgotPasswordPage() {
 
   if (isSubmitted) {
     return (
-      <Card className="w-full max-w-md">
-        <CardContent className="pt-6">
+      <Card className="w-full max-w-md border-primary/20 shadow-xl shadow-primary/5">
+        <CardContent className="pt-8">
           <div className="flex flex-col items-center text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <CheckCircle className="h-8 w-8 text-primary" />
+            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+              <CheckCircle className="h-10 w-10 text-primary" />
             </div>
-            <h2 className="mb-2 text-xl font-bold text-foreground">Check Your Email</h2>
-            <p className="mb-6 text-muted-foreground">
-              We've sent a password reset link to your email address. Please check your inbox and follow the
-              instructions.
+            <h2 className="mb-2 text-2xl font-bold tracking-tight text-foreground">Check Your Email</h2>
+            <p className="mb-8 text-muted-foreground/80 leading-relaxed">
+              We've sent a password reset link to <span className="font-semibold text-foreground">your email address</span>. Please check your inbox and follow the instructions.
             </p>
-            <Button asChild className="w-full">
+            <Button asChild className="w-full h-11 text-base font-semibold">
               <Link href="/login">Back to Login</Link>
             </Button>
           </div>
@@ -65,22 +64,22 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">Forgot Password?</CardTitle>
-        <CardDescription>Enter your email and we'll send you a reset link</CardDescription>
+    <Card className="w-full max-w-md border-primary/20 shadow-xl shadow-primary/5">
+      <CardHeader className="text-center space-y-1">
+        <CardTitle className="text-3xl font-bold tracking-tight">Forgot Password?</CardTitle>
+        <CardDescription className="text-base text-muted-foreground/80">Enter your email and we'll send you a reset link</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
-                className="pl-10"
+                placeholder="john@example.com"
+                className="pl-10 h-11 bg-muted/30 focus-visible:ring-primary/30"
                 {...register("email", {
                   required: "Email is required",
                   pattern: {
@@ -90,17 +89,17 @@ export default function ForgotPasswordPage() {
                 })}
               />
             </div>
-            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+            {errors.email && <p className="text-sm font-medium text-destructive">{errors.email.message}</p>}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" className="w-full h-11 text-base font-semibold transition-all hover:scale-[1.01]" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Send Reset Link
           </Button>
         </form>
 
-        <div className="mt-6 text-center">
-          <Link href="/login" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
+        <div className="mt-8 text-center">
+          <Link href="/login" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Login
           </Link>
