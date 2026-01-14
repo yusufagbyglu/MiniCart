@@ -2,6 +2,7 @@
 
 import { SidebarProvider, useSidebar } from "@/context/SidebarContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AuthProvider } from "@/context/AuthContext";
 import AppHeader from "@/components/admin/layout/AppHeader";
 import AppSidebar from "@/components/admin/layout/AppSidebar";
 import Backdrop from "@/components/admin/layout/Backdrop";
@@ -41,10 +42,12 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider>
-      <ThemeProvider>
-        <AdminLayoutContent>{children}</AdminLayoutContent>
-      </ThemeProvider>
-    </SidebarProvider>
+    <AuthProvider>
+      <SidebarProvider>
+        <ThemeProvider>
+          <AdminLayoutContent>{children}</AdminLayoutContent>
+        </ThemeProvider>
+      </SidebarProvider>
+    </AuthProvider>
   );
 }

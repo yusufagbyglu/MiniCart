@@ -5,17 +5,15 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/context/SidebarContext";
 import {
-  BoxCubeIcon,
-  CalenderIcon,
+  BoxIcon,
   ChevronDownIcon,
   GridIcon,
   HorizontaLDots,
   ListIcon,
-  PageIcon,
   PieChartIcon,
   PlugInIcon,
-  TableIcon,
   UserCircleIcon,
+  LockIcon,
 } from "@/icons/index";
 import SidebarWidget from "./SidebarWidget";
 
@@ -30,66 +28,55 @@ const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+    path: "/admin",
   },
   {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
-  },
-
-  {
-    name: "Forms",
-    icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  },
-  {
-    name: "Tables",
-    icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-  },
-  {
-    name: "Pages",
-    icon: <PageIcon />,
+    name: "Catalog",
+    icon: <BoxIcon />,
     subItems: [
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
+      { name: "Products", path: "/admin/products" },
+      { name: "Categories", path: "/admin/categories" },
     ],
+  },
+  {
+    name: "Sales",
+    icon: <ListIcon />,
+    subItems: [
+      { name: "Orders", path: "/admin/orders" },
+      { name: "Coupons", path: "/admin/coupons" },
+    ],
+  },
+  {
+    name: "Customers",
+    icon: <UserCircleIcon />,
+    path: "/admin/users",
   },
 ];
 
 const othersItems: NavItem[] = [
   {
     icon: <PieChartIcon />,
-    name: "Charts",
+    name: "Analytics",
     subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
+      { name: "Sales Reports", path: "/admin/reports/sales" },
+      { name: "Stock History", path: "/admin/reports/stock" },
     ],
   },
   {
-    icon: <BoxCubeIcon />,
-    name: "UI Elements",
+    icon: <LockIcon />,
+    name: "Settings",
     subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Videos", path: "/videos", pro: false },
+      { name: "Roles", path: "/admin/roles" },
+      { name: "Permissions", path: "/admin/permissions" },
+      { name: "Tax Rates", path: "/admin/tax-rates" },
     ],
   },
   {
     icon: <PlugInIcon />,
-    name: "Authentication",
+    name: "System",
     subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
+      { name: "Audit Logs", path: "/admin/audit-logs" },
+      { name: "Notifications", path: "/admin/notifications" },
     ],
   },
 ];

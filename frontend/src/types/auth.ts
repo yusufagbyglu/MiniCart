@@ -7,6 +7,10 @@ export interface User {
   updated_at: string
   roles: Role[]
   permissions: string[]
+  profile_photo_url?: string
+  bio?: string
+  location?: string
+  phone?: string
 }
 
 export interface Role {
