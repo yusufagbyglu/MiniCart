@@ -127,6 +127,7 @@ export default function CategoryModal({ isOpen, onClose, onSuccess, category }: 
                 <div>
                     <Label>Description</Label>
                     <TextArea
+                        name="description"
                         value={formData.description}
                         onChange={handleTextAreaChange}
                         placeholder="Enter category description"

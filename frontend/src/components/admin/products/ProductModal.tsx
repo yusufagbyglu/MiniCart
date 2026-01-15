@@ -154,9 +154,11 @@ export default function ProductModal({ isOpen, onClose, onSuccess, product }: Pr
                 <div>
                     <Label>Description</Label>
                     <TextArea
+                        name="description"
                         value={formData.description}
                         onChange={handleTextAreaChange}
                         placeholder="Enter product description"
+                        required
                     />
                 </div>
 
