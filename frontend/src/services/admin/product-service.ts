@@ -17,7 +17,7 @@ class AdminProductService extends BaseService {
 
     // Product Management (Management Prefix)
     public async getProducts(params?: any): Promise<Product[]> {
-        return this.get<Product[]>('/products', { params })
+        return this.get<Product[]>('/admin/products', { params })
     }
 
     public async createProduct(data: any): Promise<Product> {
@@ -25,6 +25,9 @@ class AdminProductService extends BaseService {
     }
 
     public async updateProduct(slug: string, data: any): Promise<Product> {
+        if (data instanceof FormData) {
+            return this.post<Product>(`/management/products/${slug}`, data)
+        }
         return this.put<Product>(`/management/products/${slug}`, data)
     }
 

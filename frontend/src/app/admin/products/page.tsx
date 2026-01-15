@@ -13,31 +13,45 @@ import Image from "next/image";
 import { adminProductService } from "@/services/admin/product-service";
 import { Product } from "@/types/product";
 import { PencilIcon, TrashBinIcon, PlusIcon } from "@/icons";
+import ProductModal from "@/components/admin/products/ProductModal";
 
 export default function ProductsPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+    const fetchProducts = async () => {
+        setLoading(true);
+        try {
+            const data = await adminProductService.getProducts();
+            setProducts(data);
+        } catch (error) {
+            console.error("Error fetching products:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                const data = await adminProductService.getProducts();
-                setProducts(data);
-            } catch (error) {
-                console.error("Error fetching products:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchProducts();
     }, []);
+
+    const handleEdit = (product: Product) => {
+        setSelectedProduct(product);
+        setIsModalOpen(true);
+    };
+
+    const handleAdd = () => {
+        setSelectedProduct(null);
+        setIsModalOpen(true);
+    };
 
     const handleDelete = async (slug: string) => {
         if (window.confirm("Are you sure you want to delete this product?")) {
             try {
                 await adminProductService.deleteProduct(slug);
-                setProducts(products.filter((p) => p.slug !== slug));
+                fetchProducts();
             } catch (error) {
                 console.error("Error deleting product:", error);
             }
@@ -50,7 +64,10 @@ export default function ProductsPage() {
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-white/90">
                     Products
                 </h3>
-                <button className="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600">
+                <button
+                    onClick={handleAdd}
+                    className="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600"
+                >
                     <PlusIcon className="w-4 h-4" />
                     Add Product
                 </button>
@@ -85,11 +102,11 @@ export default function ProductsPage() {
                         <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
                             {loading ? (
                                 <TableRow>
-                                    <TableCell className="py-4 text-center" />
+                                    <TableCell className="py-4 text-center" colSpan={6}>Loading...</TableCell>
                                 </TableRow>
                             ) : products.length === 0 ? (
                                 <TableRow>
-                                    <TableCell className="py-4 text-center" />
+                                    <TableCell className="py-4 text-center" colSpan={6}>No products found</TableCell>
                                 </TableRow>
                             ) : (
                                 products.map((product) => (
@@ -138,7 +155,10 @@ export default function ProductsPage() {
                                         </TableCell>
                                         <TableCell className="py-3 text-end">
                                             <div className="flex items-center justify-end gap-2">
-                                                <button className="text-gray-500 hover:text-brand-500">
+                                                <button
+                                                    onClick={() => handleEdit(product)}
+                                                    className="text-gray-500 hover:text-brand-500"
+                                                >
                                                     <PencilIcon className="w-5 h-5" />
                                                 </button>
                                                 <button
@@ -156,6 +176,13 @@ export default function ProductsPage() {
                     </Table>
                 </div>
             </div>
+
+            <ProductModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={fetchProducts}
+                product={selectedProduct}
+            />
         </div>
     );
 }

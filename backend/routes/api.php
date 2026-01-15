@@ -160,6 +160,9 @@ Route::prefix('v1')->group(function () {
             // Tax Management
             Route::apiResource('tax-rates', TaxRateController::class);
 
+            // Admin Product Management
+            Route::get('/products', [ProductController::class, 'getAllProducts']);
+
             // Site-wide Statistics & Imports (Existing)
             Route::get('/products/stats', [ProductController::class, 'stats']);
             Route::post('/products/import', [ProductController::class, 'import']);

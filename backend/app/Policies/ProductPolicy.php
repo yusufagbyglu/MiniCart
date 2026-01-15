@@ -20,6 +20,14 @@ class ProductPolicy
     }
 
     /**
+     * Determine if the user can view all products (for admin).
+     */
+    public function viewAll(User $user): bool
+    {
+        return $user->hasPermissionTo('products.view-all');
+    }
+
+    /**
      * Determine if the user can view the product.
      */
     public function view(?User $user, Product $product): bool
