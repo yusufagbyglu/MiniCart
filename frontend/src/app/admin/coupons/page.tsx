@@ -11,31 +11,45 @@ import {
 import Badge from "@/components/admin/ui/badge/Badge";
 import { adminService } from "@/services/admin/admin-service";
 import { PencilIcon, TrashBinIcon, PlusIcon } from "@/icons";
+import CouponModal from "@/components/admin/coupons/CouponModal";
 
 export default function CouponsPage() {
     const [coupons, setCoupons] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedCoupon, setSelectedCoupon] = useState<any | null>(null);
+
+    const fetchCoupons = async () => {
+        setLoading(true);
+        try {
+            const data = await adminService.getCoupons();
+            setCoupons(data);
+        } catch (error) {
+            console.error("Error fetching coupons:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchCoupons = async () => {
-            try {
-                const data = await adminService.getCoupons();
-                setCoupons(data);
-            } catch (error) {
-                console.error("Error fetching coupons:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchCoupons();
     }, []);
+
+    const handleAdd = () => {
+        setSelectedCoupon(null);
+        setIsModalOpen(true);
+    };
+
+    const handleEdit = (coupon: any) => {
+        setSelectedCoupon(coupon);
+        setIsModalOpen(true);
+    };
 
     const handleDelete = async (id: number) => {
         if (window.confirm("Are you sure you want to delete this coupon?")) {
             try {
                 await adminService.deleteCoupon(id);
-                setCoupons(coupons.filter((c) => c.id !== id));
+                fetchCoupons();
             } catch (error) {
                 console.error("Error deleting coupon:", error);
             }
@@ -48,7 +62,10 @@ export default function CouponsPage() {
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-white/90">
                     Coupons
                 </h3>
-                <button className="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600">
+                <button
+                    onClick={handleAdd}
+                    className="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600"
+                >
                     <PlusIcon className="w-4 h-4" />
                     Add Coupon
                 </button>
@@ -104,7 +121,7 @@ export default function CouponsPage() {
                                         <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                                             {new Date(coupon.valid_until).toLocaleDateString()}
                                         </TableCell>
-                                        <TableCell className="py-3">
+                                        <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                                             <Badge
                                                 size="sm"
                                                 color={coupon.is_active ? "success" : "error"}
@@ -114,7 +131,10 @@ export default function CouponsPage() {
                                         </TableCell>
                                         <TableCell className="py-3 text-end">
                                             <div className="flex items-center justify-end gap-2">
-                                                <button className="text-gray-500 hover:text-brand-500">
+                                                <button
+                                                    onClick={() => handleEdit(coupon)}
+                                                    className="text-gray-500 hover:text-brand-500"
+                                                >
                                                     <PencilIcon className="w-5 h-5" />
                                                 </button>
                                                 <button
@@ -132,6 +152,13 @@ export default function CouponsPage() {
                     </Table>
                 </div>
             </div>
+
+            <CouponModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={fetchCoupons}
+                coupon={selectedCoupon}
+            />
         </div>
     );
 }
