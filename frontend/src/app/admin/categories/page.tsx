@@ -11,35 +11,55 @@ import {
 import { adminCategoryService } from "@/services/admin/category-service";
 import { Category } from "@/types/product";
 import { PencilIcon, TrashBinIcon, PlusIcon } from "@/icons";
+import CategoryModal from "@/components/admin/categories/CategoryModal";
 
 export default function CategoriesPage() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+
+    const fetchCategories = async () => {
+        setLoading(true);
+        try {
+            const data = await adminCategoryService.getCategories();
+            setCategories(data);
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const data = await adminCategoryService.getCategories();
-                setCategories(data);
-            } catch (error) {
-                console.error("Error fetching categories:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchCategories();
     }, []);
+
+    const handleAdd = () => {
+        setSelectedCategory(null);
+        setIsModalOpen(true);
+    };
+
+    const handleEdit = (category: Category) => {
+        setSelectedCategory(category);
+        setIsModalOpen(true);
+    };
 
     const handleDelete = async (id: number) => {
         if (window.confirm("Are you sure you want to delete this category?")) {
             try {
                 await adminCategoryService.deleteCategory(id);
-                setCategories(categories.filter((c) => c.id !== id));
+                fetchCategories();
             } catch (error) {
                 console.error("Error deleting category:", error);
             }
         }
+    };
+
+    const getParentName = (parentId: number | null) => {
+        if (!parentId) return "Root";
+        const parent = categories.find(c => c.id === parentId);
+        return parent ? parent.name : "Unknown";
     };
 
     return (
@@ -48,7 +68,10 @@ export default function CategoriesPage() {
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-white/90">
                     Categories
                 </h3>
-                <button className="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600">
+                <button
+                    onClick={handleAdd}
+                    className="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600"
+                >
                     <PlusIcon className="w-4 h-4" />
                     Add Category
                 </button>
@@ -77,7 +100,7 @@ export default function CategoriesPage() {
                         <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
                             {loading ? (
                                 <TableRow>
-                                    <TableCell className="py-4 text-center" />
+                                    <TableCell className="py-4 text-center" colSpan={4}>Loading...</TableCell>
                                 </TableRow>
                             ) : categories.length === 0 ? (
                                 <TableRow>
@@ -93,11 +116,14 @@ export default function CategoriesPage() {
                                             {category.description || "-"}
                                         </TableCell>
                                         <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
-                                            {category.parent_id || "Root"}
+                                            {getParentName(category.parent_id)}
                                         </TableCell>
                                         <TableCell className="py-3 text-end">
                                             <div className="flex items-center justify-end gap-2">
-                                                <button className="text-gray-500 hover:text-brand-500">
+                                                <button
+                                                    onClick={() => handleEdit(category)}
+                                                    className="text-gray-500 hover:text-brand-500"
+                                                >
                                                     <PencilIcon className="w-5 h-5" />
                                                 </button>
                                                 <button
@@ -115,6 +141,14 @@ export default function CategoriesPage() {
                     </Table>
                 </div>
             </div>
+
+            <CategoryModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={fetchCategories}
+                category={selectedCategory}
+            />
         </div>
     );
 }
+

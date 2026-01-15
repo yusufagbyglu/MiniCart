@@ -2,9 +2,11 @@ import React from "react";
 
 interface TextareaProps {
   placeholder?: string; // Placeholder text
+  name?: string; // Add name prop
   rows?: number; // Number of rows
   value?: string; // Current value
   onChange?: (value: string) => void; // Change handler
+  required?: boolean; // Add required prop
   className?: string; // Additional CSS classes
   disabled?: boolean; // Disabled state
   error?: boolean; // Error state
@@ -13,9 +15,11 @@ interface TextareaProps {
 
 const TextArea: React.FC<TextareaProps> = ({
   placeholder = "Enter your message", // Default placeholder
+  name,
   rows = 3, // Default number of rows
   value = "", // Default value
   onChange, // Callback for changes
+  required = false,
   className = "", // Additional custom styles
   disabled = false, // Disabled state
   error = false, // Error state
@@ -40,18 +44,19 @@ const TextArea: React.FC<TextareaProps> = ({
   return (
     <div className="relative">
       <textarea
+        name={name}
         placeholder={placeholder}
         rows={rows}
         value={value}
         onChange={handleChange}
+        required={required}
         disabled={disabled}
         className={textareaClasses}
       />
       {hint && (
         <p
-          className={`mt-2 text-sm ${
-            error ? "text-error-500" : "text-gray-500 dark:text-gray-400"
-          }`}
+          className={`mt-2 text-sm ${error ? "text-error-500" : "text-gray-500 dark:text-gray-400"
+            }`}
         >
           {hint}
         </p>
