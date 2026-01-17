@@ -1,10 +1,15 @@
-import { ApiResponse } from '@/types/api'
+import { ApiResponse, PaginatedResponse } from '@/types/api'
 import { api } from '@/lib/axios'
 
 export class BaseService {
   protected async get<T>(url: string, config = {}): Promise<T> {
     const response = await api.get<ApiResponse<T>>(url, config)
     return response.data.data
+  }
+
+  protected async getPaginated<T>(url: string, config = {}): Promise<PaginatedResponse<T>> {
+    const response = await api.get<PaginatedResponse<T>>(url, config)
+    return response.data
   }
 
   protected async post<T>(url: string, data?: any, config = {}): Promise<T> {

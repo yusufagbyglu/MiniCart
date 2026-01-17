@@ -6,14 +6,48 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use App\Data\UpdateOrderStatusData;
+use App\Http\Resources\OrderResource;
 
 class OrderController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('viewAny', Order::class);
-        $orders = Order::with('user')->latest()->paginate(20);
-        return response()->json($orders);
+
+        $query = Order::with(['user']);
+
+        // Search by order number or customer name/email
+        $query->when($request->query('search'), function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        });
+
+        // Filter by status
+        $query->when($request->query('status'), function ($query, $status) {
+            $query->where('status', $status);
+        });
+
+        // Filter by date range
+        $query->when($request->query('start_date'), function ($query, $startDate) {
+            $query->whereDate('created_at', '>=', $startDate);
+        });
+        $query->when($request->query('end_date'), function ($query, $endDate) {
+            $query->whereDate('created_at', '<=', $endDate);
+        });
+
+        $sortField = $request->query('sort', 'created_at');
+        $sortDirection = $request->query('order', 'desc');
+        $query->orderBy($sortField, $sortDirection);
+
+        $perPage = $request->query('per_page', 20);
+        $orders = $query->paginate($perPage);
+
+        return OrderResource::collection($orders);
     }
 
     public function show($id)

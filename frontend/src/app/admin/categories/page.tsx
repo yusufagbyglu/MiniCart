@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
     Table,
     TableBody,
@@ -12,28 +12,76 @@ import { adminCategoryService } from "@/services/admin/category-service";
 import { Category } from "@/types/product";
 import { PencilIcon, TrashBinIcon, PlusIcon } from "@/icons";
 import CategoryModal from "@/components/admin/categories/CategoryModal";
+import SearchBar from "@/components/admin/ui/SearchBar";
+import Pagination from "@/components/admin/ui/Pagination";
+import toast from "react-hot-toast";
 
 export default function CategoriesPage() {
     const [categories, setCategories] = useState<Category[]>([]);
+    const [allCategories, setAllCategories] = useState<Category[]>([]); // For parent name lookup
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
-    const fetchCategories = async () => {
-        setLoading(true);
+    // Search and Pagination states
+    const [searchQuery, setSearchQuery] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(15);
+    const [totalItems, setTotalItems] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+
+    const fetchAllCategories = async () => {
         try {
             const data = await adminCategoryService.getCategories();
-            setCategories(data);
+            setAllCategories(data);
         } catch (error) {
-            console.error("Error fetching categories:", error);
-        } finally {
-            setLoading(false);
+            console.error("Error fetching all categories:", error);
         }
     };
 
+    const fetchCategories = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params: any = {
+                page: currentPage,
+                per_page: itemsPerPage,
+            };
+
+            if (searchQuery) params.search = searchQuery;
+
+            const response = await adminCategoryService.getPaginatedCategories(params);
+            setCategories(response.data);
+            setTotalItems(response.meta.total);
+            setTotalPages(response.meta.last_page);
+        } catch (error) {
+            console.error("Error fetching categories:", error);
+            toast.error("Failed to load categories");
+        } finally {
+            setLoading(false);
+        }
+    }, [currentPage, itemsPerPage, searchQuery]);
+
+    useEffect(() => {
+        fetchAllCategories();
+    }, []);
+
     useEffect(() => {
         fetchCategories();
-    }, []);
+    }, [fetchCategories]);
+
+    const handleSearch = (query: string) => {
+        setSearchQuery(query);
+        setCurrentPage(1);
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    const handleItemsPerPageChange = (size: number) => {
+        setItemsPerPage(size);
+        setCurrentPage(1);
+    };
 
     const handleAdd = () => {
         setSelectedCategory(null);
@@ -46,19 +94,24 @@ export default function CategoriesPage() {
     };
 
     const handleDelete = async (id: number) => {
-        if (window.confirm("Are you sure you want to delete this category?")) {
-            try {
-                await adminCategoryService.deleteCategory(id);
-                fetchCategories();
-            } catch (error) {
-                console.error("Error deleting category:", error);
-            }
+        if (!window.confirm("Are you sure you want to delete this category?")) {
+            return;
+        }
+
+        try {
+            await adminCategoryService.deleteCategory(id);
+            toast.success("Category deleted successfully");
+            fetchCategories();
+            fetchAllCategories();
+        } catch (error) {
+            console.error("Error deleting category:", error);
+            toast.error("Failed to delete category");
         }
     };
 
     const getParentName = (parentId: number | null) => {
         if (!parentId) return "Root";
-        const parent = categories.find(c => c.id === parentId);
+        const parent = allCategories.find(c => c.id === parentId);
         return parent ? parent.name : "Unknown";
     };
 
@@ -75,6 +128,13 @@ export default function CategoriesPage() {
                     <PlusIcon className="w-4 h-4" />
                     Add Category
                 </button>
+            </div>
+
+            <div className="max-w-md">
+                <SearchBar
+                    placeholder="Search by name..."
+                    onSearch={handleSearch}
+                />
             </div>
 
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
@@ -100,7 +160,11 @@ export default function CategoriesPage() {
                         <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
                             {loading ? (
                                 <TableRow>
-                                    <TableCell className="py-4 text-center" colSpan={4}>Loading...</TableCell>
+                                    <TableCell className="py-4 text-center" colSpan={4}>
+                                        <div className="flex justify-center py-4">
+                                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent"></div>
+                                        </div>
+                                    </TableCell>
                                 </TableRow>
                             ) : categories.length === 0 ? (
                                 <TableRow>
@@ -140,12 +204,26 @@ export default function CategoriesPage() {
                         </TableBody>
                     </Table>
                 </div>
+
+                {!loading && categories.length > 0 && (
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={totalItems}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={handlePageChange}
+                        onItemsPerPageChange={handleItemsPerPageChange}
+                    />
+                )}
             </div>
 
             <CategoryModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                onSuccess={fetchCategories}
+                onSuccess={() => {
+                    fetchCategories();
+                    fetchAllCategories();
+                }}
                 category={selectedCategory}
             />
         </div>

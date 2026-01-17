@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
     Table,
     TableBody,
@@ -10,8 +10,12 @@ import {
 } from "@/components/admin/ui/table";
 import Badge from "@/components/admin/ui/badge/Badge";
 import { adminUserService } from "@/services/admin/user-service";
+import { adminService } from "@/services/admin/admin-service";
 import { PencilIcon, TrashBinIcon, PlusIcon } from "@/icons";
 import UserModal from "@/components/admin/users/UserModal";
+import SearchBar from "@/components/admin/ui/SearchBar";
+import FilterDropdown from "@/components/admin/ui/FilterDropdown";
+import Pagination from "@/components/admin/ui/Pagination";
 import toast from "react-hot-toast";
 
 export default function UsersPage() {
@@ -20,22 +24,75 @@ export default function UsersPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<any | null>(null);
 
-    const fetchUsers = async () => {
+    // Search and Filter states
+    const [searchQuery, setSearchQuery] = useState("");
+    const [roleFilter, setRoleFilter] = useState<string | number | null>(null);
+    const [roles, setRoles] = useState<any[]>([]);
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(15);
+    const [totalItems, setTotalItems] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+
+    const fetchRoles = async () => {
+        try {
+            const data = await adminService.getRoles();
+            setRoles(data);
+        } catch (error) {
+            console.error("Error fetching roles:", error);
+        }
+    };
+
+    const fetchUsers = useCallback(async () => {
         setLoading(true);
         try {
-            const data = await adminUserService.getUsers();
-            setUsers(data);
+            const params: any = {
+                page: currentPage,
+                per_page: itemsPerPage,
+            };
+
+            if (searchQuery) params.search = searchQuery;
+            if (roleFilter) params.role = roleFilter;
+
+            const response = await adminUserService.getUsers(params);
+            setUsers(response.data);
+            setTotalItems(response.meta.total);
+            setTotalPages(response.meta.last_page);
         } catch (error) {
             console.error("Error fetching users:", error);
             toast.error("Failed to load users");
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, itemsPerPage, searchQuery, roleFilter]);
+
+    useEffect(() => {
+        fetchRoles();
+    }, []);
 
     useEffect(() => {
         fetchUsers();
-    }, []);
+    }, [fetchUsers]);
+
+    const handleSearch = (query: string) => {
+        setSearchQuery(query);
+        setCurrentPage(1);
+    };
+
+    const handleRoleFilter = (value: string | number | null) => {
+        setRoleFilter(value);
+        setCurrentPage(1);
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    const handleItemsPerPageChange = (size: number) => {
+        setItemsPerPage(size);
+        setCurrentPage(1);
+    };
 
     const handleAdd = () => {
         setSelectedUser(null);
@@ -66,7 +123,7 @@ export default function UsersPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-white/90">
-                    Customers
+                    Users
                 </h3>
                 <button
                     onClick={handleAdd}
@@ -75,6 +132,22 @@ export default function UsersPage() {
                     <PlusIcon className="w-4 h-4" />
                     Add User
                 </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <SearchBar
+                    placeholder="Search by name, email..."
+                    onSearch={handleSearch}
+                />
+                <FilterDropdown
+                    label="Role"
+                    value={roleFilter}
+                    onChange={handleRoleFilter}
+                    options={roles.map((role) => ({
+                        label: role.name,
+                        value: role.slug,
+                    }))}
+                />
             </div>
 
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
@@ -103,7 +176,11 @@ export default function UsersPage() {
                         <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
                             {loading ? (
                                 <TableRow>
-                                    <TableCell className="py-4 text-center" colSpan={5}>Loading...</TableCell>
+                                    <TableCell className="py-4 text-center" colSpan={5}>
+                                        <div className="flex justify-center py-4">
+                                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent"></div>
+                                        </div>
+                                    </TableCell>
                                 </TableRow>
                             ) : users.length === 0 ? (
                                 <TableRow>
@@ -154,6 +231,17 @@ export default function UsersPage() {
                         </TableBody>
                     </Table>
                 </div>
+
+                {!loading && users.length > 0 && (
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={totalItems}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={handlePageChange}
+                        onItemsPerPageChange={handleItemsPerPageChange}
+                    />
+                )}
             </div>
 
             <UserModal

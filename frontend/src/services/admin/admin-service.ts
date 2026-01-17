@@ -1,4 +1,5 @@
 import { BaseService } from '../base-service'
+import { PaginatedResponse } from '@/types/api'
 
 class AdminService extends BaseService {
     private static instance: AdminService
@@ -15,8 +16,8 @@ class AdminService extends BaseService {
     }
 
     // Coupon Management
-    public async getCoupons(params?: any): Promise<any> {
-        return this.get('/admin/coupons', { params })
+    public async getCoupons(params?: any): Promise<PaginatedResponse<any>> {
+        return this.getPaginated<any>('/admin/coupons', { params })
     }
 
     public async createCoupon(data: any): Promise<any> {
@@ -32,8 +33,8 @@ class AdminService extends BaseService {
     }
 
     // Tax Rate Management
-    public async getTaxRates(params?: any): Promise<any> {
-        return this.get('/admin/tax-rates', { params })
+    public async getTaxRates(params?: any): Promise<PaginatedResponse<any>> {
+        return this.getPaginated<any>('/admin/tax-rates', { params })
     }
 
     public async createTaxRate(data: any): Promise<any> {
@@ -49,8 +50,8 @@ class AdminService extends BaseService {
     }
 
     // Role Management
-    public async getRoles(params?: any): Promise<any> {
-        return this.get('/admin/roles', { params })
+    public async getRoles(params?: any): Promise<PaginatedResponse<any>> {
+        return this.getPaginated<any>('/admin/roles', { params })
     }
 
     public async createRole(data: any): Promise<any> {

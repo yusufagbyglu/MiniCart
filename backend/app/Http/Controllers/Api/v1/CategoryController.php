@@ -39,8 +39,21 @@ class CategoryController extends Controller
     {
         $this->authorize('viewAny', Category::class);
 
-        $categories = Category::with(['parent', 'children'])
-            ->paginate((int) $request->input('per_page', 15));
+        $query = Category::with(['parent', 'children']);
+
+        // Search by name or description
+        $query->when($request->query('search'), function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        });
+
+        if ($request->has('per_page') && $request->query('per_page') != -1) {
+            $categories = $query->paginate((int) $request->input('per_page', 15));
+        } else {
+            $categories = $query->get();
+        }
 
         return CategoryResource::collection($categories)
             ->additional(['success' => true])

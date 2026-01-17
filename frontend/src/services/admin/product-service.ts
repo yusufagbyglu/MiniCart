@@ -1,5 +1,6 @@
 import { BaseService } from '../base-service'
 import type { Product, Category } from '@/types/product'
+import { PaginatedResponse } from '@/types/api'
 
 class AdminProductService extends BaseService {
     private static instance: AdminProductService
@@ -16,8 +17,8 @@ class AdminProductService extends BaseService {
     }
 
     // Product Management (Management Prefix)
-    public async getProducts(params?: any): Promise<Product[]> {
-        return this.get<Product[]>('/admin/products', { params })
+    public async getProducts(params?: any): Promise<PaginatedResponse<Product>> {
+        return this.getPaginated<Product>('/admin/products', { params })
     }
 
     public async createProduct(data: any): Promise<Product> {

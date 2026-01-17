@@ -1,4 +1,5 @@
 import { BaseService } from '../base-service'
+import { PaginatedResponse } from '@/types/api'
 
 class AdminOrderService extends BaseService {
     private static instance: AdminOrderService
@@ -14,8 +15,8 @@ class AdminOrderService extends BaseService {
         return AdminOrderService.instance
     }
 
-    public async getOrders(params?: any): Promise<any> {
-        return this.get('/admin/orders', { params })
+    public async getOrders(params?: any): Promise<PaginatedResponse<any>> {
+        return this.getPaginated<any>('/admin/orders', { params })
     }
 
     public async getOrder(id: number | string): Promise<any> {

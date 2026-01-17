@@ -8,15 +8,44 @@ use App\Models\User;
 use App\Data\UserData;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
+use App\Http\Resources\UserResource;
 
 class UserController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index()
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
     {
         $this->authorize('viewAny', User::class);
-        return response()->json(User::with('roles')->paginate(15));
+
+        $query = User::with('roles');
+
+        // Search by name or email
+        $query->when($request->query('search'), function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        });
+
+        // Filter by role
+        $query->when($request->query('role'), function ($query, $role) {
+            $query->whereHas('roles', function ($rq) use ($role) {
+                $rq->where('slug', $role);
+            });
+        });
+
+        $sortField = $request->query('sort', 'created_at');
+        $sortDirection = $request->query('order', 'desc');
+        $query->orderBy($sortField, $sortDirection);
+
+        $perPage = $request->query('per_page', 15);
+
+        return UserResource::collection($query->paginate($perPage));
     }
 
     public function store(UserData $data)

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
     Table,
     TableBody,
@@ -12,6 +12,11 @@ import Badge from "@/components/admin/ui/badge/Badge";
 import { adminOrderService } from "@/services/admin/order-service";
 import { EyeIcon } from "@/icons";
 import OrderDetailModal from "@/components/admin/orders/OrderDetailModal";
+import SearchBar from "@/components/admin/ui/SearchBar";
+import FilterDropdown from "@/components/admin/ui/FilterDropdown";
+import Pagination from "@/components/admin/ui/Pagination";
+import toast from "react-hot-toast";
+import Input from "@/components/admin/form/input/InputField";
 
 export default function OrdersPage() {
     const [orders, setOrders] = useState<any[]>([]);
@@ -19,27 +24,80 @@ export default function OrdersPage() {
     const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const fetchOrders = async () => {
+    // Search and Filter states
+    const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState<string | number | null>(null);
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalItems, setTotalItems] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
+
+    const fetchOrders = useCallback(async () => {
         setLoading(true);
         try {
-            const data = await adminOrderService.getOrders();
-            setOrders(data);
+            const params: any = {
+                page: currentPage,
+                per_page: itemsPerPage,
+            };
+
+            if (searchQuery) params.search = searchQuery;
+            if (statusFilter) params.status = statusFilter;
+            if (startDate) params.start_date = startDate;
+            if (endDate) params.end_date = endDate;
+
+            const response = await adminOrderService.getOrders(params);
+            setOrders(response.data);
+            setTotalItems(response.meta.total);
+            setTotalPages(response.meta.last_page);
         } catch (error) {
             console.error("Error fetching orders:", error);
-            alert("Failed to load orders");
+            toast.error("Failed to load orders");
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, itemsPerPage, searchQuery, statusFilter, startDate, endDate]);
 
     useEffect(() => {
         fetchOrders();
-    }, []);
+    }, [fetchOrders]);
+
+    const handleSearch = (query: string) => {
+        setSearchQuery(query);
+        setCurrentPage(1);
+    };
+
+    const handleStatusFilter = (value: string | number | null) => {
+        setStatusFilter(value);
+        setCurrentPage(1);
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    const handleItemsPerPageChange = (size: number) => {
+        setItemsPerPage(size);
+        setCurrentPage(1);
+    };
 
     const handleViewOrder = (orderId: number) => {
         setSelectedOrderId(orderId);
         setIsModalOpen(true);
     };
+
+    const orderStatuses = [
+        { label: "Pending", value: "pending" },
+        { label: "Confirmed", value: "confirmed" },
+        { label: "Processing", value: "processing" },
+        { label: "Shipped", value: "shipped" },
+        { label: "Delivered", value: "delivered" },
+        { label: "Cancelled", value: "cancelled" },
+        { label: "Refunded", value: "refunded" },
+    ];
 
     return (
         <div className="space-y-6">
@@ -47,6 +105,45 @@ export default function OrdersPage() {
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-white/90">
                     Orders
                 </h3>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                <div className="lg:col-span-1">
+                    <SearchBar
+                        placeholder="Search orders..."
+                        onSearch={handleSearch}
+                    />
+                </div>
+                <div>
+                    <FilterDropdown
+                        label="Status"
+                        value={statusFilter}
+                        onChange={handleStatusFilter}
+                        options={orderStatuses}
+                    />
+                </div>
+                <div>
+                    <Input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => {
+                            setStartDate(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                        placeholder="Start Date"
+                    />
+                </div>
+                <div>
+                    <Input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => {
+                            setEndDate(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                        placeholder="End Date"
+                    />
+                </div>
             </div>
 
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
@@ -78,7 +175,11 @@ export default function OrdersPage() {
                         <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
                             {loading ? (
                                 <TableRow>
-                                    <TableCell className="py-4 text-center" colSpan={6}>Loading...</TableCell>
+                                    <TableCell className="py-4 text-center" colSpan={6}>
+                                        <div className="flex justify-center py-4">
+                                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent"></div>
+                                        </div>
+                                    </TableCell>
                                 </TableRow>
                             ) : orders.length === 0 ? (
                                 <TableRow>
@@ -130,6 +231,17 @@ export default function OrdersPage() {
                         </TableBody>
                     </Table>
                 </div>
+
+                {!loading && orders.length > 0 && (
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={totalItems}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={handlePageChange}
+                        onItemsPerPageChange={handleItemsPerPageChange}
+                    />
+                )}
             </div>
 
             <OrderDetailModal

@@ -6,13 +6,28 @@ use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use Illuminate\Http\Request;
 use App\Data\CouponData;
+use App\Http\Resources\CouponResource;
 
 class CouponController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('viewAny', Coupon::class);
-        return response()->json(Coupon::latest()->paginate(20));
+
+        $query = Coupon::query();
+
+        // Search by code
+        $query->when($request->query('search'), function ($query, $search) {
+            $query->where('code', 'like', "%{$search}%");
+        });
+
+        $sortField = $request->query('sort', 'created_at');
+        $sortDirection = $request->query('order', 'desc');
+        $query->orderBy($sortField, $sortDirection);
+
+        $perPage = $request->query('per_page', 20);
+
+        return CouponResource::collection($query->paginate($perPage));
     }
 
     public function store(CouponData $data)

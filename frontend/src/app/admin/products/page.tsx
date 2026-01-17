@@ -11,7 +11,8 @@ import {
 import Badge from "@/components/admin/ui/badge/Badge";
 import Image from "next/image";
 import { adminProductService } from "@/services/admin/product-service";
-import { Product } from "@/types/product";
+import { adminCategoryService } from "@/services/admin/category-service";
+import { Product, Category } from "@/types/product";
 import { PencilIcon, TrashBinIcon, PlusIcon } from "@/icons";
 import ProductModal from "@/components/admin/products/ProductModal";
 import SearchBar from "@/components/admin/ui/SearchBar";
@@ -36,21 +37,73 @@ export default function ProductsPage() {
     const [totalItems, setTotalItems] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
 
-    const fetchProducts = async () => {
-        setLoading(true);
+    // Filter data
+    const [categories, setCategories] = useState<Category[]>([]);
+
+    const fetchCategories = async () => {
         try {
-            const data = await adminProductService.getProducts();
-            setProducts(data);
+            const data = await adminCategoryService.getCategories();
+            setCategories(data);
         } catch (error) {
-            console.error("Error fetching products:", error);
-        } finally {
-            setLoading(false);
+            console.error("Error fetching categories:", error);
         }
     };
 
+    const fetchProducts = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params: any = {
+                page: currentPage,
+                per_page: itemsPerPage,
+            };
+
+            if (searchQuery) params.search = searchQuery;
+            if (statusFilter !== null) params.is_active = statusFilter === "active";
+            if (categoryFilter !== null) params.category_id = categoryFilter;
+
+            const response = await adminProductService.getProducts(params);
+            setProducts(response.data);
+            setTotalItems(response.meta.total);
+            setTotalPages(response.meta.last_page);
+        } catch (error) {
+            console.error("Error fetching products:", error);
+            toast.error("Failed to fetch products");
+        } finally {
+            setLoading(false);
+        }
+    }, [currentPage, itemsPerPage, searchQuery, statusFilter, categoryFilter]);
+
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
     useEffect(() => {
         fetchProducts();
-    }, []);
+    }, [fetchProducts]);
+
+    const handleSearch = (query: string) => {
+        setSearchQuery(query);
+        setCurrentPage(1); // Reset to first page on search
+    };
+
+    const handleStatusFilter = (value: string | number | null) => {
+        setStatusFilter(value);
+        setCurrentPage(1);
+    };
+
+    const handleCategoryFilter = (value: string | number | null) => {
+        setCategoryFilter(value);
+        setCurrentPage(1);
+    };
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    const handleItemsPerPageChange = (size: number) => {
+        setItemsPerPage(size);
+        setCurrentPage(1);
+    };
 
     const handleEdit = (product: Product) => {
         setSelectedProduct(product);
@@ -88,6 +141,31 @@ export default function ProductsPage() {
                 </button>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <SearchBar
+                    placeholder="Search by name, SKU..."
+                    onSearch={handleSearch}
+                />
+                <FilterDropdown
+                    label="Status"
+                    value={statusFilter}
+                    onChange={handleStatusFilter}
+                    options={[
+                        { label: "Active", value: "active" },
+                        { label: "Inactive", value: "inactive" },
+                    ]}
+                />
+                <FilterDropdown
+                    label="Category"
+                    value={categoryFilter}
+                    onChange={handleCategoryFilter}
+                    options={categories.map((cat) => ({
+                        label: cat.name,
+                        value: cat.id,
+                    }))}
+                />
+            </div>
+
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
                 <div className="max-w-full overflow-x-auto">
                     <Table>
@@ -117,7 +195,11 @@ export default function ProductsPage() {
                         <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
                             {loading ? (
                                 <TableRow>
-                                    <TableCell className="py-4 text-center" colSpan={6}>Loading...</TableCell>
+                                    <TableCell className="py-4 text-center" colSpan={6}>
+                                        <div className="flex justify-center py-4">
+                                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent"></div>
+                                        </div>
+                                    </TableCell>
                                 </TableRow>
                             ) : products.length === 0 ? (
                                 <TableRow>
@@ -190,6 +272,17 @@ export default function ProductsPage() {
                         </TableBody>
                     </Table>
                 </div>
+
+                {!loading && products.length > 0 && (
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalItems={totalItems}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={handlePageChange}
+                        onItemsPerPageChange={handleItemsPerPageChange}
+                    />
+                )}
             </div>
 
             <ProductModal

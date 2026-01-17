@@ -1,5 +1,6 @@
 import { BaseService } from '../base-service'
 import type { Category } from '@/types/product'
+import { PaginatedResponse } from '@/types/api'
 
 class AdminCategoryService extends BaseService {
     private static instance: AdminCategoryService
@@ -17,6 +18,10 @@ class AdminCategoryService extends BaseService {
 
     public async getCategories(): Promise<Category[]> {
         return this.get<Category[]>('/categories')
+    }
+
+    public async getPaginatedCategories(params?: any): Promise<PaginatedResponse<Category>> {
+        return this.getPaginated<Category>('/categories', { params })
     }
 
     public async createCategory(data: any): Promise<Category> {

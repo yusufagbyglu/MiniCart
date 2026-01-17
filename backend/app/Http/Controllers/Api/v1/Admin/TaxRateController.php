@@ -6,13 +6,31 @@ use App\Http\Controllers\Controller;
 use App\Models\TaxRate;
 use App\Data\TaxRateData;
 use Illuminate\Http\Request;
+use App\Http\Resources\TaxRateResource;
 
 class TaxRateController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('viewAny', TaxRate::class);
-        return response()->json(TaxRate::paginate(15));
+
+        $query = TaxRate::query();
+
+        // Search by name or country
+        $query->when($request->query('search'), function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('country', 'like', "%{$search}%");
+            });
+        });
+
+        $sortField = $request->query('sort', 'created_at');
+        $sortDirection = $request->query('order', 'desc');
+        $query->orderBy($sortField, $sortDirection);
+
+        $perPage = $request->query('per_page', 15);
+
+        return TaxRateResource::collection($query->paginate($perPage));
     }
 
     public function store(TaxRateData $data)
