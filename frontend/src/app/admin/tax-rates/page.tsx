@@ -11,34 +11,52 @@ import {
 import Badge from "@/components/admin/ui/badge/Badge";
 import { adminService } from "@/services/admin/admin-service";
 import { PencilIcon, TrashBinIcon, PlusIcon } from "@/icons";
+import TaxRateModal from "@/components/admin/tax-rates/TaxRateModal";
 
 export default function TaxRatesPage() {
     const [taxRates, setTaxRates] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedTaxRate, setSelectedTaxRate] = useState<any | null>(null);
+
+    const fetchTaxRates = async () => {
+        setLoading(true);
+        try {
+            const data = await adminService.getTaxRates();
+            setTaxRates(data);
+        } catch (error) {
+            console.error("Error fetching tax rates:", error);
+            alert("Failed to load tax rates");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchTaxRates = async () => {
-            try {
-                const data = await adminService.getTaxRates();
-                setTaxRates(data);
-            } catch (error) {
-                console.error("Error fetching tax rates:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchTaxRates();
     }, []);
 
+    const handleAdd = () => {
+        setSelectedTaxRate(null);
+        setIsModalOpen(true);
+    };
+
+    const handleEdit = (taxRate: any) => {
+        setSelectedTaxRate(taxRate);
+        setIsModalOpen(true);
+    };
+
     const handleDelete = async (id: number) => {
-        if (window.confirm("Are you sure you want to delete this tax rate?")) {
-            try {
-                await adminService.deleteTaxRate(id);
-                setTaxRates(taxRates.filter((t) => t.id !== id));
-            } catch (error) {
-                console.error("Error deleting tax rate:", error);
-            }
+        if (!window.confirm("Are you sure you want to delete this tax rate?")) {
+            return;
+        }
+
+        try {
+            await adminService.deleteTaxRate(id);
+            setTaxRates(taxRates.filter((t) => t.id !== id));
+        } catch (error) {
+            console.error("Error deleting tax rate:", error);
+            alert("Failed to delete tax rate");
         }
     };
 
@@ -48,7 +66,10 @@ export default function TaxRatesPage() {
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-white/90">
                     Tax Rates
                 </h3>
-                <button className="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600">
+                <button
+                    onClick={handleAdd}
+                    className="flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-sm font-medium text-white hover:bg-brand-600"
+                >
                     <PlusIcon className="w-4 h-4" />
                     Add Tax Rate
                 </button>
@@ -114,12 +135,17 @@ export default function TaxRatesPage() {
                                         </TableCell>
                                         <TableCell className="py-3 text-end">
                                             <div className="flex items-center justify-end gap-2">
-                                                <button className="text-gray-500 hover:text-brand-500">
+                                                <button
+                                                    onClick={() => handleEdit(rate)}
+                                                    className="text-gray-500 hover:text-brand-500"
+                                                    title="Edit tax rate"
+                                                >
                                                     <PencilIcon className="w-5 h-5" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(rate.id)}
                                                     className="text-gray-500 hover:text-error-500"
+                                                    title="Delete tax rate"
                                                 >
                                                     <TrashBinIcon className="w-5 h-5" />
                                                 </button>
@@ -132,6 +158,13 @@ export default function TaxRatesPage() {
                     </Table>
                 </div>
             </div>
+
+            <TaxRateModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={fetchTaxRates}
+                taxRate={selectedTaxRate}
+            />
         </div>
     );
 }

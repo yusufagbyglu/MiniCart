@@ -11,25 +11,35 @@ import {
 import Badge from "@/components/admin/ui/badge/Badge";
 import { adminOrderService } from "@/services/admin/order-service";
 import { EyeIcon } from "@/icons";
+import OrderDetailModal from "@/components/admin/orders/OrderDetailModal";
 
 export default function OrdersPage() {
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const fetchOrders = async () => {
+        setLoading(true);
+        try {
+            const data = await adminOrderService.getOrders();
+            setOrders(data);
+        } catch (error) {
+            console.error("Error fetching orders:", error);
+            alert("Failed to load orders");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchOrders = async () => {
-            try {
-                const data = await adminOrderService.getOrders();
-                setOrders(data);
-            } catch (error) {
-                console.error("Error fetching orders:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchOrders();
     }, []);
+
+    const handleViewOrder = (orderId: number) => {
+        setSelectedOrderId(orderId);
+        setIsModalOpen(true);
+    };
 
     return (
         <div className="space-y-6">
@@ -106,7 +116,11 @@ export default function OrdersPage() {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="py-3 text-end">
-                                            <button className="text-gray-500 hover:text-brand-500">
+                                            <button
+                                                onClick={() => handleViewOrder(order.id)}
+                                                className="text-gray-500 hover:text-brand-500"
+                                                title="View order details"
+                                            >
                                                 <EyeIcon className="w-5 h-5" />
                                             </button>
                                         </TableCell>
@@ -117,6 +131,13 @@ export default function OrdersPage() {
                     </Table>
                 </div>
             </div>
+
+            <OrderDetailModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                orderId={selectedOrderId}
+                onStatusUpdate={fetchOrders}
+            />
         </div>
     );
 }
