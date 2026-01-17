@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
     Table,
     TableBody,
@@ -14,12 +14,27 @@ import { adminProductService } from "@/services/admin/product-service";
 import { Product } from "@/types/product";
 import { PencilIcon, TrashBinIcon, PlusIcon } from "@/icons";
 import ProductModal from "@/components/admin/products/ProductModal";
+import SearchBar from "@/components/admin/ui/SearchBar";
+import FilterDropdown from "@/components/admin/ui/FilterDropdown";
+import Pagination from "@/components/admin/ui/Pagination";
+import toast from "react-hot-toast";
 
 export default function ProductsPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+    // Search and Filter states
+    const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState<string | number | null>(null);
+    const [categoryFilter, setCategoryFilter] = useState<string | number | null>(null);
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [totalItems, setTotalItems] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
 
     const fetchProducts = async () => {
         setLoading(true);

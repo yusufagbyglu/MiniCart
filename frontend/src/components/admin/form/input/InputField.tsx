@@ -10,9 +10,9 @@ interface InputProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;
   className?: string;
-  min?: string;
-  max?: string;
-  step?: number;
+  min?: string | number;
+  max?: string | number;
+  step?: string | number;
   disabled?: boolean;
   success?: boolean;
   error?: boolean;
