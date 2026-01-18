@@ -16,7 +16,7 @@ import SearchBar from "@/components/admin/ui/SearchBar";
 import FilterDropdown from "@/components/admin/ui/FilterDropdown";
 import Pagination from "@/components/admin/ui/Pagination";
 import toast from "react-hot-toast";
-import Input from "@/components/admin/form/input/InputField";
+import DateRangePicker from "@/components/admin/ui/DateRangePicker";
 
 export default function OrdersPage() {
     const [orders, setOrders] = useState<any[]>([]);
@@ -27,8 +27,9 @@ export default function OrdersPage() {
     // Search and Filter states
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<string | number | null>(null);
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
+    const [dateRange, setDateRange] = useState({ from: "", to: "" });
+    const [sortBy, setSortBy] = useState("created_at");
+    const [sortOrder, setSortOrder] = useState("desc");
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -42,12 +43,14 @@ export default function OrdersPage() {
             const params: any = {
                 page: currentPage,
                 per_page: itemsPerPage,
+                sort: sortBy,
+                order: sortOrder,
             };
 
             if (searchQuery) params.search = searchQuery;
             if (statusFilter) params.status = statusFilter;
-            if (startDate) params.start_date = startDate;
-            if (endDate) params.end_date = endDate;
+            if (dateRange.from) params.start_date = dateRange.from;
+            if (dateRange.to) params.end_date = dateRange.to;
 
             const response = await adminOrderService.getOrders(params);
             setOrders(response.data);
@@ -59,7 +62,7 @@ export default function OrdersPage() {
         } finally {
             setLoading(false);
         }
-    }, [currentPage, itemsPerPage, searchQuery, statusFilter, startDate, endDate]);
+    }, [currentPage, itemsPerPage, searchQuery, statusFilter, dateRange, sortBy, sortOrder]);
 
     useEffect(() => {
         fetchOrders();
@@ -70,8 +73,16 @@ export default function OrdersPage() {
         setCurrentPage(1);
     };
 
-    const handleStatusFilter = (value: string | number | null) => {
-        setStatusFilter(value);
+    const handleFilterChange = (setter: any) => (value: any) => {
+        setter(value);
+        setCurrentPage(1);
+    };
+
+    const handleSortChange = (value: string | number | null) => {
+        if (!value) return;
+        const [field, order] = (value as string).split(":");
+        setSortBy(field);
+        setSortOrder(order);
         setCurrentPage(1);
     };
 
@@ -107,43 +118,42 @@ export default function OrdersPage() {
                 </h3>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-                <div className="lg:col-span-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="md:col-span-2 lg:col-span-1">
                     <SearchBar
                         placeholder="Search orders..."
                         onSearch={handleSearch}
                     />
                 </div>
-                <div>
-                    <FilterDropdown
-                        label="Status"
-                        value={statusFilter}
-                        onChange={handleStatusFilter}
-                        options={orderStatuses}
-                    />
-                </div>
-                <div>
-                    <Input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => {
-                            setStartDate(e.target.value);
+                <FilterDropdown
+                    label="Status"
+                    value={statusFilter}
+                    onChange={handleFilterChange(setStatusFilter)}
+                    options={orderStatuses}
+                />
+                <div className="lg:col-span-2">
+                    <DateRangePicker
+                        label="Order Date"
+                        value={dateRange}
+                        onChange={(val) => {
+                            setDateRange(val);
                             setCurrentPage(1);
                         }}
-                        placeholder="Start Date"
                     />
                 </div>
-                <div>
-                    <Input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => {
-                            setEndDate(e.target.value);
-                            setCurrentPage(1);
-                        }}
-                        placeholder="End Date"
-                    />
-                </div>
+                <FilterDropdown
+                    label="Sort By"
+                    value={`${sortBy}:${sortOrder}`}
+                    onChange={handleSortChange}
+                    options={[
+                        { label: "Newest First", value: "created_at:desc" },
+                        { label: "Oldest First", value: "created_at:asc" },
+                        { label: "Total (High-Low)", value: "total_amount:desc" },
+                        { label: "Total (Low-High)", value: "total_amount:asc" },
+                        { label: "Status (A-Z)", value: "status:asc" },
+                        { label: "Status (Z-A)", value: "status:desc" },
+                    ]}
+                />
             </div>
 
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">

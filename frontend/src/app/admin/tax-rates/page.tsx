@@ -13,6 +13,7 @@ import { adminService } from "@/services/admin/admin-service";
 import { PencilIcon, TrashBinIcon, PlusIcon } from "@/icons";
 import TaxRateModal from "@/components/admin/tax-rates/TaxRateModal";
 import SearchBar from "@/components/admin/ui/SearchBar";
+import FilterDropdown from "@/components/admin/ui/FilterDropdown";
 import Pagination from "@/components/admin/ui/Pagination";
 import toast from "react-hot-toast";
 
@@ -22,8 +23,14 @@ export default function TaxRatesPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedTaxRate, setSelectedTaxRate] = useState<any | null>(null);
 
-    // Search and Pagination states
+    // Search and Filter states
     const [searchQuery, setSearchQuery] = useState("");
+    const [typeFilter, setTypeFilter] = useState<string | number | null>(null);
+    const [statusFilter, setStatusFilter] = useState<string | number | null>(null);
+    const [sortBy, setSortBy] = useState("created_at");
+    const [sortOrder, setSortOrder] = useState("desc");
+
+    // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(15);
     const [totalItems, setTotalItems] = useState(0);
@@ -35,9 +42,13 @@ export default function TaxRatesPage() {
             const params: any = {
                 page: currentPage,
                 per_page: itemsPerPage,
+                sort: sortBy,
+                order: sortOrder,
             };
 
             if (searchQuery) params.search = searchQuery;
+            if (typeFilter) params.type = typeFilter;
+            if (statusFilter !== null) params.is_active = statusFilter === "active";
 
             const response = await adminService.getTaxRates(params);
             setTaxRates(response.data);
@@ -49,7 +60,7 @@ export default function TaxRatesPage() {
         } finally {
             setLoading(false);
         }
-    }, [currentPage, itemsPerPage, searchQuery]);
+    }, [currentPage, itemsPerPage, searchQuery, typeFilter, statusFilter, sortBy, sortOrder]);
 
     useEffect(() => {
         fetchTaxRates();
@@ -57,6 +68,19 @@ export default function TaxRatesPage() {
 
     const handleSearch = (query: string) => {
         setSearchQuery(query);
+        setCurrentPage(1);
+    };
+
+    const handleFilterChange = (setter: any) => (value: any) => {
+        setter(value);
+        setCurrentPage(1);
+    };
+
+    const handleSortChange = (value: string | number | null) => {
+        if (!value) return;
+        const [field, order] = (value as string).split(":");
+        setSortBy(field);
+        setSortOrder(order);
         setCurrentPage(1);
     };
 
@@ -109,10 +133,43 @@ export default function TaxRatesPage() {
                 </button>
             </div>
 
-            <div className="max-w-md">
-                <SearchBar
-                    placeholder="Search by name, country..."
-                    onSearch={handleSearch}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="md:col-span-2 lg:col-span-1">
+                    <SearchBar
+                        placeholder="Search by name, country..."
+                        onSearch={handleSearch}
+                    />
+                </div>
+                <FilterDropdown
+                    label="Type"
+                    value={typeFilter}
+                    onChange={handleFilterChange(setTypeFilter)}
+                    options={[
+                        { label: "Percentage", value: "percentage" },
+                        { label: "Fixed", value: "fixed" },
+                    ]}
+                />
+                <FilterDropdown
+                    label="Status"
+                    value={statusFilter}
+                    onChange={handleFilterChange(setStatusFilter)}
+                    options={[
+                        { label: "Active", value: "active" },
+                        { label: "Inactive", value: "inactive" },
+                    ]}
+                />
+                <FilterDropdown
+                    label="Sort By"
+                    value={`${sortBy}:${sortOrder}`}
+                    onChange={handleSortChange}
+                    options={[
+                        { label: "Newest First", value: "created_at:desc" },
+                        { label: "Oldest First", value: "created_at:asc" },
+                        { label: "Name (A-Z)", value: "name:asc" },
+                        { label: "Name (Z-A)", value: "name:desc" },
+                        { label: "Rate (High-Low)", value: "rate:desc" },
+                        { label: "Rate (Low-High)", value: "rate:asc" },
+                    ]}
                 />
             </div>
 

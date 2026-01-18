@@ -91,7 +91,8 @@ class ProductController extends Controller
         $query->when($request->query('search'), function ($query, $search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('sku', 'like', "%{$search}%");
             });
         });
 
@@ -107,10 +108,27 @@ class ProductController extends Controller
             $query->where('is_active', $request->boolean('is_active'));
         });
 
+        $query->when($request->query('stock_level'), function ($query, $stockLevel) {
+            if ($stockLevel === 'out_of_stock') {
+                $query->where('stock', 0);
+            } elseif ($stockLevel === 'low_stock') {
+                $query->where('stock', '>', 0)->where('stock', '<=', 10);
+            } elseif ($stockLevel === 'in_stock') {
+                $query->where('stock', '>', 10);
+            }
+        });
+
         // Sorting
         $sortField = $request->query('sort', 'created_at');
         $sortDirection = $request->query('order', 'desc');
-        $query->orderBy($sortField, $sortDirection);
+
+        // Ensure allowed sort fields
+        $allowedSortFields = ['name', 'price', 'stock', 'created_at'];
+        if (in_array($sortField, $allowedSortFields)) {
+            $query->orderBy($sortField, $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
 
         // Pagination
         $perPage = $request->query('per_page', 15);

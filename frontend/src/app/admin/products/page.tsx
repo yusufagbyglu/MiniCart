@@ -30,6 +30,10 @@ export default function ProductsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState<string | number | null>(null);
     const [categoryFilter, setCategoryFilter] = useState<string | number | null>(null);
+    const [stockFilter, setStockFilter] = useState<string | number | null>(null);
+    const [featuredFilter, setFeaturedFilter] = useState<string | number | null>(null);
+    const [sortBy, setSortBy] = useState<string>("created_at");
+    const [sortOrder, setSortOrder] = useState<string>("desc");
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -55,11 +59,15 @@ export default function ProductsPage() {
             const params: any = {
                 page: currentPage,
                 per_page: itemsPerPage,
+                sort: sortBy,
+                order: sortOrder,
             };
 
             if (searchQuery) params.search = searchQuery;
             if (statusFilter !== null) params.is_active = statusFilter === "active";
             if (categoryFilter !== null) params.category_id = categoryFilter;
+            if (stockFilter !== null) params.stock_level = stockFilter;
+            if (featuredFilter !== null) params.featured = featuredFilter === "featured";
 
             const response = await adminProductService.getProducts(params);
             setProducts(response.data);
@@ -71,7 +79,7 @@ export default function ProductsPage() {
         } finally {
             setLoading(false);
         }
-    }, [currentPage, itemsPerPage, searchQuery, statusFilter, categoryFilter]);
+    }, [currentPage, itemsPerPage, searchQuery, statusFilter, categoryFilter, stockFilter, featuredFilter, sortBy, sortOrder]);
 
     useEffect(() => {
         fetchCategories();
@@ -86,13 +94,16 @@ export default function ProductsPage() {
         setCurrentPage(1); // Reset to first page on search
     };
 
-    const handleStatusFilter = (value: string | number | null) => {
-        setStatusFilter(value);
+    const handleFilterChange = (setter: any) => (value: any) => {
+        setter(value);
         setCurrentPage(1);
     };
 
-    const handleCategoryFilter = (value: string | number | null) => {
-        setCategoryFilter(value);
+    const handleSortChange = (value: string | number | null) => {
+        if (!value) return;
+        const [field, order] = (value as string).split(":");
+        setSortBy(field);
+        setSortOrder(order);
         setCurrentPage(1);
     };
 
@@ -141,15 +152,17 @@ export default function ProductsPage() {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <SearchBar
-                    placeholder="Search by name, SKU..."
-                    onSearch={handleSearch}
-                />
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className="md:col-span-2 lg:col-span-2">
+                    <SearchBar
+                        placeholder="Search by name, SKU..."
+                        onSearch={handleSearch}
+                    />
+                </div>
                 <FilterDropdown
                     label="Status"
                     value={statusFilter}
-                    onChange={handleStatusFilter}
+                    onChange={handleFilterChange(setStatusFilter)}
                     options={[
                         { label: "Active", value: "active" },
                         { label: "Inactive", value: "inactive" },
@@ -158,11 +171,36 @@ export default function ProductsPage() {
                 <FilterDropdown
                     label="Category"
                     value={categoryFilter}
-                    onChange={handleCategoryFilter}
+                    onChange={handleFilterChange(setCategoryFilter)}
                     options={categories.map((cat) => ({
                         label: cat.name,
                         value: cat.id,
                     }))}
+                />
+                <FilterDropdown
+                    label="Stock Level"
+                    value={stockFilter}
+                    onChange={handleFilterChange(setStockFilter)}
+                    options={[
+                        { label: "In Stock", value: "in_stock" },
+                        { label: "Low Stock", value: "low_stock" },
+                        { label: "Out of Stock", value: "out_of_stock" },
+                    ]}
+                />
+                <FilterDropdown
+                    label="Sort By"
+                    value={`${sortBy}:${sortOrder}`}
+                    onChange={handleSortChange}
+                    options={[
+                        { label: "Newest First", value: "created_at:desc" },
+                        { label: "Oldest First", value: "created_at:asc" },
+                        { label: "Name (A-Z)", value: "name:asc" },
+                        { label: "Name (Z-A)", value: "name:desc" },
+                        { label: "Price (Low-High)", value: "price:asc" },
+                        { label: "Price (High-Low)", value: "price:desc" },
+                        { label: "Stock (Low-High)", value: "stock:asc" },
+                        { label: "Stock (High-Low)", value: "stock:desc" },
+                    ]}
                 />
             </div>
 

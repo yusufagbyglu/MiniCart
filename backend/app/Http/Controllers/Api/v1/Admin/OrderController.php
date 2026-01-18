@@ -32,6 +32,19 @@ class OrderController extends Controller
             $query->where('status', $status);
         });
 
+        // Filter by payment method
+        $query->when($request->query('payment_method'), function ($query, $paymentMethod) {
+            $query->where('payment_method', $paymentMethod);
+        });
+
+        // Filter by price range
+        $query->when($request->query('min_price'), function ($query, $minPrice) {
+            $query->where('total_amount', '>=', $minPrice);
+        });
+        $query->when($request->query('max_price'), function ($query, $maxPrice) {
+            $query->where('total_amount', '<=', $maxPrice);
+        });
+
         // Filter by date range
         $query->when($request->query('start_date'), function ($query, $startDate) {
             $query->whereDate('created_at', '>=', $startDate);
@@ -40,9 +53,16 @@ class OrderController extends Controller
             $query->whereDate('created_at', '<=', $endDate);
         });
 
+        // Sorting
         $sortField = $request->query('sort', 'created_at');
         $sortDirection = $request->query('order', 'desc');
-        $query->orderBy($sortField, $sortDirection);
+
+        $allowedSortFields = ['created_at', 'total_amount', 'status'];
+        if (in_array($sortField, $allowedSortFields)) {
+            $query->orderBy($sortField, $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
 
         $perPage = $request->query('per_page', 20);
         $orders = $query->paginate($perPage);

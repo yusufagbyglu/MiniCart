@@ -17,6 +17,7 @@ import SearchBar from "@/components/admin/ui/SearchBar";
 import FilterDropdown from "@/components/admin/ui/FilterDropdown";
 import Pagination from "@/components/admin/ui/Pagination";
 import toast from "react-hot-toast";
+import DateRangePicker from "@/components/admin/ui/DateRangePicker";
 
 export default function UsersPage() {
     const [users, setUsers] = useState<any[]>([]);
@@ -27,6 +28,9 @@ export default function UsersPage() {
     // Search and Filter states
     const [searchQuery, setSearchQuery] = useState("");
     const [roleFilter, setRoleFilter] = useState<string | number | null>(null);
+    const [dateRange, setDateRange] = useState({ from: "", to: "" });
+    const [sortBy, setSortBy] = useState("created_at");
+    const [sortOrder, setSortOrder] = useState("desc");
     const [roles, setRoles] = useState<any[]>([]);
 
     // Pagination states
@@ -37,8 +41,8 @@ export default function UsersPage() {
 
     const fetchRoles = async () => {
         try {
-            const data = await adminService.getRoles();
-            setRoles(data);
+            const response = await adminService.getRoles();
+            setRoles(response.data);
         } catch (error) {
             console.error("Error fetching roles:", error);
         }
@@ -50,10 +54,14 @@ export default function UsersPage() {
             const params: any = {
                 page: currentPage,
                 per_page: itemsPerPage,
+                sort: sortBy,
+                order: sortOrder,
             };
 
             if (searchQuery) params.search = searchQuery;
             if (roleFilter) params.role = roleFilter;
+            if (dateRange.from) params.start_date = dateRange.from;
+            if (dateRange.to) params.end_date = dateRange.to;
 
             const response = await adminUserService.getUsers(params);
             setUsers(response.data);
@@ -65,7 +73,7 @@ export default function UsersPage() {
         } finally {
             setLoading(false);
         }
-    }, [currentPage, itemsPerPage, searchQuery, roleFilter]);
+    }, [currentPage, itemsPerPage, searchQuery, roleFilter, dateRange, sortBy, sortOrder]);
 
     useEffect(() => {
         fetchRoles();
@@ -80,8 +88,16 @@ export default function UsersPage() {
         setCurrentPage(1);
     };
 
-    const handleRoleFilter = (value: string | number | null) => {
-        setRoleFilter(value);
+    const handleFilterChange = (setter: any) => (value: any) => {
+        setter(value);
+        setCurrentPage(1);
+    };
+
+    const handleSortChange = (value: string | number | null) => {
+        if (!value) return;
+        const [field, order] = (value as string).split(":");
+        setSortBy(field);
+        setSortOrder(order);
         setCurrentPage(1);
     };
 
@@ -134,19 +150,44 @@ export default function UsersPage() {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <SearchBar
-                    placeholder="Search by name, email..."
-                    onSearch={handleSearch}
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div className="md:col-span-2 lg:col-span-1">
+                    <SearchBar
+                        placeholder="Search by name, email..."
+                        onSearch={handleSearch}
+                    />
+                </div>
                 <FilterDropdown
                     label="Role"
                     value={roleFilter}
-                    onChange={handleRoleFilter}
+                    onChange={handleFilterChange(setRoleFilter)}
                     options={roles.map((role) => ({
                         label: role.name,
                         value: role.slug,
                     }))}
+                />
+                <div className="lg:col-span-2">
+                    <DateRangePicker
+                        label="Registration Date"
+                        value={dateRange}
+                        onChange={(val) => {
+                            setDateRange(val);
+                            setCurrentPage(1);
+                        }}
+                    />
+                </div>
+                <FilterDropdown
+                    label="Sort By"
+                    value={`${sortBy}:${sortOrder}`}
+                    onChange={handleSortChange}
+                    options={[
+                        { label: "Newest First", value: "created_at:desc" },
+                        { label: "Oldest First", value: "created_at:asc" },
+                        { label: "Name (A-Z)", value: "name:asc" },
+                        { label: "Name (Z-A)", value: "name:desc" },
+                        { label: "Email (A-Z)", value: "email:asc" },
+                        { label: "Email (Z-A)", value: "email:desc" },
+                    ]}
                 />
             </div>
 

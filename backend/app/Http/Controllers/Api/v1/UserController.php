@@ -39,9 +39,24 @@ class UserController extends Controller
             });
         });
 
+        // Filter by registration date
+        $query->when($request->query('start_date'), function ($query, $startDate) {
+            $query->whereDate('created_at', '>=', $startDate);
+        });
+        $query->when($request->query('end_date'), function ($query, $endDate) {
+            $query->whereDate('created_at', '<=', $endDate);
+        });
+
+        // Sorting
         $sortField = $request->query('sort', 'created_at');
         $sortDirection = $request->query('order', 'desc');
-        $query->orderBy($sortField, $sortDirection);
+
+        $allowedSortFields = ['name', 'email', 'created_at'];
+        if (in_array($sortField, $allowedSortFields)) {
+            $query->orderBy($sortField, $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
 
         $perPage = $request->query('per_page', 15);
 

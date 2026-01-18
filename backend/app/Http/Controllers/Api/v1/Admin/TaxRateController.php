@@ -24,9 +24,36 @@ class TaxRateController extends Controller
             });
         });
 
+        // Filter by tax type
+        $query->when($request->query('type'), function ($query, $type) {
+            $query->where('type', $type);
+        });
+
+        // Filter by active status
+        $query->when($request->has('is_active'), function ($query) use ($request) {
+            $query->where('is_active', $request->boolean('is_active'));
+        });
+
+        // Filter by country
+        $query->when($request->query('country'), function ($query, $country) {
+            $query->where('country', $country);
+        });
+
+        // Filter by state
+        $query->when($request->query('state'), function ($query, $state) {
+            $query->where('state', $state);
+        });
+
+        // Sorting
         $sortField = $request->query('sort', 'created_at');
         $sortDirection = $request->query('order', 'desc');
-        $query->orderBy($sortField, $sortDirection);
+
+        $allowedSortFields = ['name', 'rate', 'country', 'created_at'];
+        if (in_array($sortField, $allowedSortFields)) {
+            $query->orderBy($sortField, $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
 
         $perPage = $request->query('per_page', 15);
 
