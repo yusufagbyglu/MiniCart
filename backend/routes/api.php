@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\v1\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\v1\Admin\CouponController;
 use App\Http\Controllers\Api\v1\Admin\TaxRateController;
 use App\Http\Controllers\Api\v1\Admin\AdminReviewController;
+use App\Http\Controllers\Api\v1\Admin\ShippingController;
 use App\Http\Controllers\Api\v1\RoleController;
 
 /*
@@ -168,6 +169,10 @@ Route::prefix('v1')->group(function () {
             Route::get('/reviews/stats', [AdminReviewController::class, 'stats']);
             Route::put('/reviews/{review}/toggle-approval', [AdminReviewController::class, 'toggleApproval']);
             Route::apiResource('reviews', AdminReviewController::class)->only(['index', 'destroy']);
+
+            // Shipping Management
+            Route::post('/orders/{orderId}/shipping', [ShippingController::class, 'update']);
+            Route::post('/orders/{orderId}/shipping/delivered', [ShippingController::class, 'markAsDelivered']);
 
             // Site-wide Statistics & Imports (Existing)
             Route::get('/products/stats', [ProductController::class, 'stats']);

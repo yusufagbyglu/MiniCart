@@ -60,4 +60,9 @@ class Order extends Model
     {
         return $this->hasMany(OrderCoupon::class);
     }
+
+    public function shippingDetails(): HasOne
+    {
+        return $this->hasOne(ShippingDetail::class);
+    }
 }

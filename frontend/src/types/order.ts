@@ -21,7 +21,7 @@ export interface Order {
   billing_address: UserAddress
   items: OrderItem[]
   payment?: Payment
-  shipping?: ShippingDetail
+  shipping_details?: ShippingDetail
   taxes?: OrderTax[]
   coupons?: OrderCoupon[]
   created_at: string

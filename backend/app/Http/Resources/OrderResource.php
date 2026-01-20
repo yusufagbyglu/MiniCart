@@ -34,6 +34,10 @@ class OrderResource extends JsonResource
                 'email' => $this->user->email ?? null,
             ],
             'order_items_count' => $this->whenCounted('orderItems'),
+            'shipping_address' => new UserAddressResource($this->whenLoaded('shippingAddress')),
+            'billing_address' => new UserAddressResource($this->whenLoaded('billingAddress')),
+            'items' => CartItemResource::collection($this->whenLoaded('items')),
+            'shipping_details' => $this->whenLoaded('shippingDetails'),
         ];
     }
 }
