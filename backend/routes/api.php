@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\v1\PaymentController;
 use App\Http\Controllers\Api\v1\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\v1\Admin\CouponController;
 use App\Http\Controllers\Api\v1\Admin\TaxRateController;
+use App\Http\Controllers\Api\v1\Admin\AdminReviewController;
 use App\Http\Controllers\Api\v1\RoleController;
 
 /*
@@ -162,6 +163,11 @@ Route::prefix('v1')->group(function () {
 
             // Admin Product Management
             Route::get('/products', [ProductController::class, 'getAllProducts']);
+
+            // Admin Review Management
+            Route::get('/reviews/stats', [AdminReviewController::class, 'stats']);
+            Route::put('/reviews/{review}/toggle-approval', [AdminReviewController::class, 'toggleApproval']);
+            Route::apiResource('reviews', AdminReviewController::class)->only(['index', 'destroy']);
 
             // Site-wide Statistics & Imports (Existing)
             Route::get('/products/stats', [ProductController::class, 'stats']);

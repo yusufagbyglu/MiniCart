@@ -5,6 +5,18 @@ export interface Review {
   user?: {
     id: number
     name: string
+    email: string
+  }
+  product?: {
+    id: number
+    name: string
+    slug: string
+    images: {
+      id: number
+      image_path: string
+      url: string
+      is_primary: boolean
+    }[]
   }
   rating: number
   title: string | null
