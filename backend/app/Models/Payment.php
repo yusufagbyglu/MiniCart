@@ -18,11 +18,32 @@ class Payment extends Model
     ];
 
     protected $casts = [
-        'payment_details' => 'array'
+        'payment_details' => 'array',
+        'amount' => 'decimal:2'
     ];
 
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
+    }
+
+    public function refunds()
+    {
+        return $this->hasMany(Refund::class);
+    }
+
+    public function getTotalRefundedAttribute()
+    {
+        return $this->refunds()->where('status', 'completed')->sum('amount');
+    }
+
+    public function isFullyRefunded(): bool
+    {
+        return $this->total_refunded >= $this->amount;
+    }
+
+    public function isRefundable(): bool
+    {
+        return $this->status === 'completed' && !$this->isFullyRefunded();
     }
 }

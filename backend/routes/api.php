@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\v1\Admin\CouponController;
 use App\Http\Controllers\Api\v1\Admin\TaxRateController;
 use App\Http\Controllers\Api\v1\Admin\AdminReviewController;
 use App\Http\Controllers\Api\v1\Admin\ShippingController;
+use App\Http\Controllers\Api\v1\Admin\AdminPaymentController;
 use App\Http\Controllers\Api\v1\RoleController;
 
 /*
@@ -173,6 +174,13 @@ Route::prefix('v1')->group(function () {
             // Shipping Management
             Route::post('/orders/{orderId}/shipping', [ShippingController::class, 'update']);
             Route::post('/orders/{orderId}/shipping/delivered', [ShippingController::class, 'markAsDelivered']);
+
+            // Payment & Refund Management
+            Route::get('/payments', [AdminPaymentController::class, 'index']);
+            Route::get('/payments/stats', [AdminPaymentController::class, 'stats']);
+            Route::get('/payments/{id}', [AdminPaymentController::class, 'show']);
+            Route::get('/refunds', [AdminPaymentController::class, 'refunds']);
+            Route::post('/orders/{orderId}/refund', [AdminPaymentController::class, 'refund']);
 
             // Site-wide Statistics & Imports (Existing)
             Route::get('/products/stats', [ProductController::class, 'stats']);

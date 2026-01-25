@@ -65,4 +65,14 @@ class Order extends Model
     {
         return $this->hasOne(ShippingDetail::class);
     }
+
+    public function payment(): HasOne
+    {
+        return $this->hasOne(Payment::class);
+    }
+
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(Refund::class);
+    }
 }

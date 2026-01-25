@@ -8,6 +8,8 @@ import { adminOrderService } from "@/services/admin/order-service";
 import { adminShippingService } from "@/services/admin/shipping-service";
 import ShippingModal from "./ShippingModal";
 import TrackingInfoCard from "./TrackingInfoCard";
+import { adminPaymentService } from "@/services/admin/payment-service";
+import RefundModal from "@/components/admin/payments/RefundModal";
 
 interface OrderDetailModalProps {
     isOpen: boolean;
@@ -21,6 +23,7 @@ export default function OrderDetailModal({ isOpen, onClose, orderId, onStatusUpd
     const [order, setOrder] = useState<any>(null);
     const [updatingStatus, setUpdatingStatus] = useState(false);
     const [isShippingModalOpen, setIsShippingModalOpen] = useState(false);
+    const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
 
     useEffect(() => {
         if (isOpen && orderId) {
@@ -148,22 +151,43 @@ export default function OrderDetailModal({ isOpen, onClose, orderId, onStatusUpd
                         </div>
 
                         {/* Shipping Actions */}
-                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 flex flex-col justify-center items-start">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Shipping Management
-                            </label>
-                            {!order.shipping_details ? (
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setIsShippingModalOpen(true)}
-                                    startIcon={<span className="text-lg">+</span>}
-                                >
-                                    Add Shipping Details
-                                </Button>
-                            ) : (
-                                <div className="text-sm text-gray-600 dark:text-gray-400">
-                                    <p>Tracking provided. See below.</p>
+                        <div className="space-y-4">
+                            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 flex flex-col justify-center items-start">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Shipping Management
+                                </label>
+                                {!order.shipping_details ? (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setIsShippingModalOpen(true)}
+                                        startIcon={<span className="text-lg">+</span>}
+                                    >
+                                        Add Shipping Details
+                                    </Button>
+                                ) : (
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                        <p>Tracking provided. See below.</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Refund Actions */}
+                            {order.payment?.status === 'completed' && (!order.payment.total_refunded || order.payment.total_refunded < order.payment.amount) && (
+                                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 flex flex-col justify-center items-start">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Refund Management
+                                    </label>
+                                    <Button
+                                        variant="danger"
+                                        size="sm"
+                                        onClick={() => setIsRefundModalOpen(true)}
+                                    >
+                                        Process Refund
+                                    </Button>
+                                    <p className="text-xs text-gray-500 mt-2">
+                                        Refundable: ${(order.payment.amount - (order.payment.total_refunded || 0)).toFixed(2)}
+                                    </p>
                                 </div>
                             )}
                         </div>
@@ -179,6 +203,42 @@ export default function OrderDetailModal({ isOpen, onClose, orderId, onStatusUpd
                                 shippingDetail={order.shipping_details}
                                 onEdit={() => setIsShippingModalOpen(true)}
                             />
+                        </div>
+                    )}
+
+                    {/* Refund History */}
+                    {order.refunds && order.refunds.length > 0 && (
+                        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
+                                Refund History
+                            </h3>
+                            <div className="space-y-3">
+                                {order.refunds.map((refund: any) => (
+                                    <div key={refund.id} className="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-lg p-3">
+                                        <div className="flex justify-between">
+                                            <span className="font-medium text-red-700 dark:text-red-400">
+                                                Refunded ${Number(refund.amount).toFixed(2)}
+                                            </span>
+                                            <span className="text-sm text-red-600 dark:text-red-400">
+                                                {new Date(refund.created_at).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                            Reason: <span className="capitalize">{refund.reason.replace('_', ' ')}</span>
+                                        </div>
+                                        {refund.notes && (
+                                            <div className="text-sm text-gray-500 dark:text-gray-500 mt-1 italic">
+                                                "{refund.notes}"
+                                            </div>
+                                        )}
+                                        {refund.processed_by_user && (
+                                            <div className="text-xs text-gray-400 mt-1">
+                                                Processed by: {refund.processed_by_user.name}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
 
@@ -325,6 +385,21 @@ export default function OrderDetailModal({ isOpen, onClose, orderId, onStatusUpd
                         setIsShippingModalOpen(false);
                     }}
                     existingDetails={order.shipping_details}
+                />
+            )}
+
+            {order && isRefundModalOpen && (
+                <RefundModal
+                    isOpen={isRefundModalOpen}
+                    onClose={() => setIsRefundModalOpen(false)}
+                    orderId={order.id}
+                    maxRefundAmount={order.payment ? Number(order.payment.amount) - Number(order.payment.total_refunded || 0) : 0}
+                    currency={order.currency || 'USD'}
+                    onSuccess={() => {
+                        fetchOrderDetails();
+                        setIsRefundModalOpen(false);
+                        alert("Refund processed successfully");
+                    }}
                 />
             )}
         </>
