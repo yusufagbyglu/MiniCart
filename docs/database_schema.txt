@@ -88,6 +88,8 @@ tax_rule [color: "yellow"] {
   tax_class_id fk > tax_class.id
   tax_rate_id fk > tax_rate.id
   priority integer default 0
+  /*valid_from timestamp?*/
+  /*valid_until timestamp?*/
   created_at timestamp
   updated_at timestamp
 }
@@ -323,4 +325,16 @@ audit_log [color: "purple"] {
   ip_address string?
   user_agent string?
   created_at timestamp
+}
+
+-- Settings
+setting [color: "green"] {
+  id pk
+  key string unique
+  value text?
+  type string default 'string'
+  group string default 'general'
+  description string?
+  created_at timestamp
+  updated_at timestamp
 }
